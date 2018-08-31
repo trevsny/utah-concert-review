@@ -5,11 +5,22 @@ from concertInfoSpider.items import ConcertItem
 
 class ConcertsSpider(scrapy.Spider):
     name = 'concerts'
-    allowed_domains = ['www.usana-amp.com/events/']
-    start_urls = ['https://www.usana-amp.com/events//']
+    allowed_domains = [
+        'www.usana-amp.com/events/',
+        'thestateroom.com/shows'
+
+    ]
+    start_urls = [
+        'https://www.usana-amp.com/events//',
+        'http://thestateroom.com/shows'
+    ]
 
     def parse(self, response):
-        # extracting response
+        # extracting response from USANA
+        if not response:
+            print("error with USANA scrape")
+        # venue = 'USANA Amphitheater'
+        # image = response.css("")
         months = response.css(".mm::text").extract() #result is a list of months
         days = response.css(".dd::text").extract()
         artists = response.css("h2").css("a::text").extract()
@@ -17,14 +28,57 @@ class ConcertsSpider(scrapy.Spider):
         
         for i in range(len(months)):
             item = ConcertItem()
+            item['venue'] = "USANA Amphitheater"
             item['artist'] = artists[i].strip()
             item['month'] = months[i]
             item['day'] = days[i]
+            item['image'] = "Nothing for now"
             item['ticket_link'] = ticket_links[i]
-            yield { 'item': item }
+            yield item
         
+        yield scrapy.Request('http://thestateroom.com/shows', callback = self.parseSR)
+    # State Room parse 
+    def parseSR(self, response):
+        if not response:
+            print("Error with State Room scrape")
+            return
+        else:
+            venue = "The State Room"
+            artists = response.css("h2").css("a::text").extract()
+            dates = response.css("h3").css("span::text").extract()
+            # separate month and day from the start time and blank space extracted
+            array = []
+            for date in dates:
+                if 'pm' in date:
+                    continue
+                elif date == " ":
+                    continue
+                elif ' ' in date:
+                    array.append(date)
+            # separate month and day so each can be saved individually in db
+            monthArray = []
+            dayArray = []
+            for date in array:
+                head,sep,tail = date.partition(',')
+                newdate = head
+                head,sep,tail = newdate.partition(' ')
+                monthArray.append(head)
+                dayArray.append(tail)
+
+            ticket_links = response.css(".ohanah-registration-link").css("a::attr(href)").extract()
+            # --images-- must put http://thestateroom.com before the link
+            images = response.css(".ohanah_modal::attr(href)").extract()
             
-            
+            for i in range(len(artists)):
+                item = ConcertItem()
+                item['venue'] = "The State Room"
+                item['artist'] = artists[i]
+                item['month'] = monthArray[i]
+                item['day'] = dayArray[i]
+                item['image'] = 'http://thestateroom.com' + images[i]
+                item['ticket_link'] = ticket_links[i]
+                yield item
+                print("Crawled SR website", item)
     
     #The State Room potential spider
     #http://thestateroom.com/shows
@@ -129,8 +183,44 @@ class ConcertsSpider(scrapy.Spider):
     # response.css(".buttons").css("a::attr(href)").extract()
     # --image-- response.css(".image").css('img::attr(src)').extract()
 
-
-
-
-
-
+    # TODO
+    # USANA
+    # The State Room
+    # The Commonwealth Room
+    # Vivint arena
+    # Kenley Amphitheater
+    # Sandy Amphitheater
+    # Sundance Bluebird Concert series
+    # Owl bar in Sundance
+    # Red Butte Garden 
+    # Gallivan Center
+    # The Egyptian
+    # Kilby Kourt
+    # Maverik Center
+    #  ---TODO--
+    # Park City Live
+    # The Union
+    # City Park, Cherry Peak Resort, Deer Valley
+    # Saltair
+    # Ogden Twilight
+    # Kingsbury Hall
+    # The Complex
+    # Metro Music Hall
+    # Sky SLC?? DJs
+    # In the Venue
+    # DeJoria Center
+    # UVU center
+    # Rice-Eccles Stadium
+    # Lavell Edwards Stadium? Besides stadium of fire?
+    # Scera Shell
+    # Urban Lounge
+    # Eccles Theater
+    # Snow Basin Resort
+    # Snow Park Amphitheater
+    # Living Arenas
+    # Utah Cultural Celebration Center
+    # Velour
+    # The Post Theater
+    # Soundwell
+    # The Royal
+    # Tuacahn Amphitheater

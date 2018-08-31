@@ -7,16 +7,12 @@
 
 from concertInfoSpider.items import ConcertItem
 from concertInfoSpider.spiders.concerts_spider import *
-import json
-import sqlite3 as lite
-
-
-# con = None #db connection object - created on init and deleted on __del__
+from apps.concertFinder.models import *
 
 class ConcertinfospiderPipeline(object):
-    def __init__(self):
-        self.setupDBCon()
-        self.createTables()
+    # def __init__(self):
+        # self.setupDBCon()
+        # self.createTables()
 
     # these functions are available in the pipeline
     # def from_crawler(cls, crawler):
@@ -26,55 +22,17 @@ class ConcertinfospiderPipeline(object):
 
     def process_item(self, item, spider):
         print("Show me the money Jerry", item)
-        # newItem = ConcertItem(artist = item['artist'], month = item['month'], day = item['day'])
-        # print("Printing the newItem after instantiating a new object of the ConcertItem class", newItem)
-        
-        self.storeInDb(**item)
-        return item
-
-    def storeInDb(self, item):
-        self.storeConcertInfoInDb(**item)
-
-    def storeConcertInfoInDb(self, **item):
-        # cur = self.con.cursor()
-        self.cur.execute("INSERT INTO Concerts(\
-            artist, \
-            month, \
-            day, \
-            ticket_link)\
-        VALUES( ?, ?, ?, ?)", \
-        (\
-            item.get("artist",""),
-            item.get('month', ""),
-            item.get('day',""),
-            item.get('ticket_link',"")
-        ))
-        self.con.commit()
-
-    def setupDBCon(self):
-        # self.con = lite.connect('test.db')
-        self.con = lite.connect('../db.sqlite3')
-        self.cur = self.con.cursor()
-        
-        
-    def __del__(self):
-        self.closeDB()
-    
-    def createTables(self):
-        self.dropConcertsTable()
-        self.createConcertsTable()
-
-    def createConcertsTable(self):
-        # cur = self.con.cursor()
-        self.cur.execute("CREATE TABLE IF NOT EXISTS Concerts(id INTEGER PRIMARY KEY NOT NULL, \
-        artist TEXT, \
-        month TEXT, \
-        day TEXT, \
-        ticket_link TEXT)")
-
-    def dropConcertsTable(self):
-        # cur = self.con.cursor()
-        self.cur.execute("DROP TABLE IF EXISTS Concerts")
-
-    def closeDB(self):
-        self.con.close()
+        # self.storeInDb(**item)
+        venues = ConcertVenue.objects.all()
+        for ven in venues:
+            concertVenueExists = False
+            if item['venue'] == ven.venue_name:
+                ConcertInfo.objects.create(venue = ven, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+                concertVenueExists = True
+                break
+        if concertVenueExists:
+            return item
+        else:
+            newVenue = ConcertVenue.objects.create(venue_name = item['venue'])
+            ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+            return item
