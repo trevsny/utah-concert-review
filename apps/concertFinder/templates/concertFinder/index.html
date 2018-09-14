@@ -4,13 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Concerts</title>
 </head>
 <body>
-    <h1>{{item.artist}}</h1>
-    <form action="/concerts" method="POST">
-        {% csrf token %}
-        
-    </form>
+    <h1></h1>
+    <div id="form">
+        <form action="/concerts" method="POST">
+            {% csrf_token %}
+            <table id="create_concert">
+                <tr>
+                    <td>Venue:</td>
+                    <td><input type = "text" name="venue" placeholder="i.e. USANA Amphitheater"></td>
+                </tr>
+                <tr>
+                    <td>Artist:</td>
+                    <td><input type="text" name="artist" placeholder="i.e. Led Zeppelin"></td>
+                </tr>
+                <tr>
+                    <td>Select Month:</td>  
+                    <td>
+                        <select name ="month">
+                            <option name = "January">January</option>
+                            <option name = "February">February</option>
+                            <option name = "March">March</option>
+                            <option name = "April">April</option>
+                            <option name = "May">May</option>
+                            <option name = "June">June</option>
+                            <option name = "July">July</option>
+                            <option name = "August">August</option>
+                            <option name = "September">September</option>
+                            <option name = "October">October</option>
+                            <option name = "November">November</option>
+                            <option name = "December">December</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Select day:</td>
+                    <td>
+                        <select name ="day">
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                            <option>9</option>
+                            <option>10</option>
+                            <option>11</option>
+                            <option>12</option>
+                            <option>13</option>
+                            <option>14</option>
+                            <option>15</option>
+                            <option>16</option>
+                            <option>17</option>
+                            <option>18</option>
+                            <option>19</option>
+                            <option>20</option>
+                            <option>21</option>
+                            <option>22</option>
+                            <option>23</option>
+                            <option>24</option>
+                            <option>25</option>
+                            <option>26</option>
+                            <option>27</option>
+                            <option>28</option>
+                            <option>29</option>
+                            <option>30</option>
+                            <option>31</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Image url:</td>
+                    <td><input type="text" name="image"></td>
+                </tr>
+                <tr>
+                    <td>Link to buy tickets url:</td>
+                    <td><input type="text" name="ticket_link"></td>
+                    </tr>
+                <tr>
+                    <td><input type="submit" value="Create"></td>
+                </tr>            
+            </table>
+        </form>
+    </div>
+    <div id="query_results">
+        {% for concert in concerts %}
+            <p>{{concert.venue.venue_name}}</p>
+            <p>{{concert.concerts}}</p>
+            <p>{{concert.artist}}</p>
+            <p>{{concert.month}}</p>
+            <p>{{concert.day}}</p>
+            <p>{{concert.image}}</p>
+            <p>{{concert.ticket_link}}</p>
+        {% endfor %}
+    </div>
+
+   
 </body>
 </html>

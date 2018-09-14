@@ -13,6 +13,7 @@ class ConcertItem(scrapy.Item):
     artist = scrapy.Field()
     month = scrapy.Field()
     day = scrapy.Field()
+    year = scrapy.Field()
     image = scrapy.Field()
     ticket_link = scrapy.Field()
     
