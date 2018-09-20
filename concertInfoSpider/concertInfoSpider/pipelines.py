@@ -21,28 +21,34 @@ class ConcertinfospiderPipeline(object):
     
     # TODO don't create duplicate item if already scraped that page
     def process_item(self, item, spider):
-        print("Show me the money Jerry", item)
-        venues = ConcertVenue.objects.all()
+        venues = ConcertVenue.objects.all()   
         existingConcerts = ConcertInfo.objects.all()
         # Check if concert already saved in db
         # Maybe refactor with an 'if any()' clause
-        for i in range(len(existingConcerts)):
-            if item['artist'] == existingConcerts[i].artist and item['venue'] == existingConcerts[i].venue.venue_name and item['month'] == existingConcerts[i].month and item['day'] == existingConcerts[i].day:
-                print("in found item portion")
-                raise DropItem("Already in db") #end process_item function aka don't save to db
+        if existingConcerts:
+            for i in range(len(existingConcerts)):
+                if item['artist'] == existingConcerts[i].artist and item['venue'] == existingConcerts[i].venue.venue_name and item['month'] == existingConcerts[i].month and item['day'] == existingConcerts[i].day:
+                    raise DropItem("Already in db") #end process_item function aka don't save to db
+                else:
+                    continue
+            # Since db not empty now check for duplicate venues
+            # Check to see if venue already exists in the db
+            # Now that duplicates have been checked and the duplicates have been Dropped, create new entries
+            for ven in venues:
+                concertVenueExists = False
+                if item['venue'] == ven.venue_name:
+                    ConcertInfo.objects.create(venue = ven, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+                    concertVenueExists = True
+                    break
+                    
+            if concertVenueExists:
+                return item
             else:
-                continue
-        # Check to see if venue already exists in the db
-        # Now that duplicates have been checked and the duplicates have been Dropped, create new entries
-        for ven in venues:
-            concertVenueExists = False
-            if item['venue'] == ven.venue_name:
-                ConcertInfo.objects.create(venue = ven, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
-                concertVenueExists = True
-                break
-        if concertVenueExists:
-            return item
+                newVenue = ConcertVenue.objects.create(venue_name = item['venue'])
+                ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+                return item
         else:
             newVenue = ConcertVenue.objects.create(venue_name = item['venue'])
             ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
             return item
+          

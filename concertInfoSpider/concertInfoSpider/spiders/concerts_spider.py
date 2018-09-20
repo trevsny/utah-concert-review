@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import re
+# from scrapy_splash import SplashRequest
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError, TCPTimedOutError
@@ -9,24 +11,32 @@ from datetime import datetime
 
 class ConcertsSpider(scrapy.Spider):
     name = 'concerts'
-    allowed_domains = [
-        # 'www.usana-amp.com/events/', TODO usana's website no longer exists
-        'thestateroom.com/shows'
-    ]
-    start_urls = [
-        'http://thestateroom.com/shows'
-    ]
+    # allowed_domains = [
+    #     # 'www.usana-amp.com/events/', TODO usana's website no longer exists
+    #     'thestateroom.com/shows'
+    # ]
+    # start_urls = [
+    #     'http://thestateroom.com/shows'
+    # ]
     currentYear = datetime.now().year
 
     def start_requests(self):
         return [
-            # scrapy.Request('http://thestateroom.com/shows', callback = self.parseSR, errback = self.errback),
-            # scrapy.Request('http://www.vivintarena.com/events?event_type=Concert', callback = self.parseVivint, errback = self.errback),
-            # scrapy.Request('https://www.egyptiantheatrecompany.org/', callback = self.parseEgyptian, errback = self.errback),
-            # scrapy.Request('http://thecommonwealthroom.ticketfly.com/listing', callback = self.parseCommon, errback = self.errback),
-            # scrapy.Request('https://www.kilbycourt.com/', callback = self.parseKilby, errback = self.errback),
-            # scrapy.Request('http://maverikcenter.com/events-tickets/upcoming-events/', callback = self.parseMaverik, errback = self.errback),
-            scrapy.Request('https://theunioneventcenter.com/upcomingevents/', callback = self.parseUnion, errback = self.errback)
+            scrapy.Request('http://thestateroom.com/shows', callback = self.parseSR, errback = self.errback),
+            scrapy.Request('http://www.vivintarena.com/events?event_type=Concert', callback = self.parseVivint, errback = self.errback),
+            scrapy.Request('https://www.egyptiantheatrecompany.org/', callback = self.parseEgyptian, errback = self.errback),
+            scrapy.Request('http://thecommonwealthroom.ticketfly.com/listing', callback = self.parseCommon, errback = self.errback),
+            scrapy.Request('https://www.kilbycourt.com/', callback = self.parseKilby, errback = self.errback),
+            scrapy.Request('http://maverikcenter.com/events-tickets/upcoming-events/', callback = self.parseMaverik, errback = self.errback),
+            scrapy.Request('https://theunioneventcenter.com/upcomingevents/', callback = self.parseUnion, errback = self.errback),
+            scrapy.Request('https://tickets.utah.edu/category/events/', callback = self.parseKingsbury, errback = self.errback),
+            scrapy.Request('https://tickets.utah.edu/category/events/page/2/', callback = self.parseKingsbury, errback = self.errback),
+            scrapy.Request('https://tickets.utah.edu/category/events/page/3/', callback = self.parseKingsbury, errback = self.errback),
+            scrapy.Request('https://tickets.utah.edu/category/events/page/4/', callback = self.parseKingsbury, errback = self.errback),
+            scrapy.Request('http://www.thecomplexslc.com/', callback = self.parseComplex, errback = self.errback),
+            scrapy.Request('https://www.metromusichall.com/', callback = self.parseMetro, errback = self.errback),
+            scrapy.Request('http://www.theurbanloungeslc.com/', callback = self.parseUrbanL, errback = self.errback),
+            # SplashRequest('http://soundwellslc.com/', callback = self.parseSoundwell, args = { 'wait': 0.5})
         ]
     
     def errback (self, failure):
@@ -52,7 +62,6 @@ class ConcertsSpider(scrapy.Spider):
     # State Room parse -- was called parseSR
 
     def parseSR(self, response):
-        print("Inside the parseSR function")
         venue = "The State Room"
         artists = response.css(".event_detail_title").css("span::text").extract()
         dates = response.css("h3").css("span::text").extract()
@@ -98,7 +107,6 @@ class ConcertsSpider(scrapy.Spider):
             item['year'] = yearArray[i]
             item['image'] = 'http://thestateroom.com' + images[i]
             item['ticket_link'] = ticket_links[i]
-            print("Crawled SR website")
             yield item
         
     def parseVivint(self, response):
@@ -162,31 +170,7 @@ class ConcertsSpider(scrapy.Spider):
             monthArray.append(head)
             dayArray.append(tail)
         # change number to month name
-        for i in range(len(monthArray)):
-            if monthArray[i] == '1':
-                monthArray[i] = "January"
-            elif monthArray[i] == '2':
-                monthArray[i] = "February"
-            elif monthArray[i] == '3':
-                monthArray[i] = "March"
-            elif monthArray[i] == '4':
-                monthArray[i] = "April"
-            elif monthArray[i] == '5':
-                monthArray[i] = "May"
-            elif monthArray[i] == '6':
-                monthArray[i] = "June"
-            elif monthArray[i] == '7':
-                monthArray[i] = "July"
-            elif monthArray[i] == '8':
-                monthArray[i] = "August"      
-            elif monthArray[i] == '9':
-                monthArray[i] = "September"
-            elif monthArray[i] == '10':
-                monthArray[i] = "October"
-            elif monthArray[i] == '11':
-                monthArray[i] = "November"
-            elif monthArray[i] == '12':
-                monthArray[i] = "December"   
+        self.changeNumberToMonthName(monthArray)
         images = response.css(".list-view-item").css('a').css('img::attr(src)').extract()
         ticket_links = response.css(".ticket-link").css("a::attr(href)").extract()
         # If a show is sold out then the ticket_link goes away
@@ -205,6 +189,7 @@ class ConcertsSpider(scrapy.Spider):
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
+
     # Kilby Court
     def parseKilby(self, response):
         artists = response.css(".headliners.summary").css('a::text').extract()
@@ -218,31 +203,7 @@ class ConcertsSpider(scrapy.Spider):
             monthArray.append(head)
             dayArray.append(tail)
         # Change number to month name
-        for i in range(len(monthArray)):
-                    if monthArray[i] == '1':
-                        monthArray[i] = "January"
-                    elif monthArray[i] == '2':
-                        monthArray[i] = "February"
-                    elif monthArray[i] == '3':
-                        monthArray[i] = "March"
-                    elif monthArray[i] == '4':
-                        monthArray[i] = "April"
-                    elif monthArray[i] == '5':
-                        monthArray[i] = "May"
-                    elif monthArray[i] == '6':
-                        monthArray[i] = "June"
-                    elif monthArray[i] == '7':
-                        monthArray[i] = "July"
-                    elif monthArray[i] == '8':
-                        monthArray[i] = "August"      
-                    elif monthArray[i] == '9':
-                        monthArray[i] = "September"
-                    elif monthArray[i] == '10':
-                        monthArray[i] = "October"
-                    elif monthArray[i] == '11':
-                        monthArray[i] = "November"
-                    elif monthArray[i] == '12':
-                        monthArray[i] = "December"
+        self.changeNumberToMonthName(monthArray)
         images = response.css('.list-view-item').css('a').css('img::attr(src)').extract()
         ticket_links = response.css(".ticket-link").css("a::attr(href)").extract()
         for i in range(len(artists)):
@@ -255,6 +216,7 @@ class ConcertsSpider(scrapy.Spider):
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
+
     # Maverik Center
     def parseMaverik(self, response):
         artists = response.css(".data-info").css("h4::text").extract()
@@ -294,6 +256,7 @@ class ConcertsSpider(scrapy.Spider):
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
+
     # The Union event center
     def parseUnion(self, response):
         artists = response.css('.eventlist-event--upcoming').css('h1').css('a::text').extract()
@@ -301,6 +264,143 @@ class ConcertsSpider(scrapy.Spider):
         days = response.css(".eventlist-datetag-startdate--day::text").extract()
         images = response.css('.eventlist-event--upcoming').css('img::attr(data-src)').extract()
         ticket_links = response.css('.eventlist-event--upcoming').css('.eventlist-column-info').css('.eventlist-excerpt').css('a::attr(href)').extract()
+        # Change month abbreviations to full name
+        self.changeMonthAbbrev( months)
+        # If a sold out show exists
+        differenceInLengths = len(artists) - len(ticket_links)
+        if differenceInLengths >= 1:
+            for i in range(0,differenceInLengths):
+                ticket_links.append("https://theunioneventcenter.com/upcomingevents/")
+        # Send data to pipeline
+        for i in range(len(artists)):
+            item = ConcertItem()
+            item['venue'] = "The Union"
+            item['artist'] = artists[i]
+            item['month'] = months[i]
+            item['day'] = days[i]
+            item['year'] = self.currentYear
+            item['image'] = images[i]
+            item['ticket_link'] = ticket_links[i]
+            yield item
+
+    # Kingsbury Hall
+    def parseKingsbury(self, response):
+        venues = response.css(".eq-ht").css('.venue::text').extract()
+        artists = response.css(".eq-ht").css('h3::text').extract()
+        months = response.css(".eq-ht").css('.event-month::text').extract()
+        days = response.css(".eq-ht").css('.event-day::text').extract()
+        images = response.css(".eq-ht").css('img::attr(src)').extract()
+        ticket_links = response.css(".eq-ht").css('a::attr(href)').extract()
+        # change month abbreviations to full name
+        self.changeMonthAbbrev(months)
+        # send data to pipeline
+        for i in range(len(artists)):
+            item = ConcertItem()
+            item['venue'] = venues[i]
+            item['artist'] = artists[i]
+            item['month'] = months[i]
+            item['day'] = days[i]
+            item['year'] = self.currentYear
+            item['image'] = images[i]
+            item['ticket_link'] = ticket_links[i]
+            yield item
+    # The Complex
+    def parseComplex(self, response):
+        artists = response.css('.inner-box').css('.content').css('h3::text').extract()
+        images = response.css('.portfolio-item').css('.image-box').css('img::attr(src)').extract()
+        ticket_links = response.css('.inner-box').css('.content').css('a::attr(href)').extract()
+        # Extracts month, day, and exact venue within The Complex
+        initialArray = response.css('.inner-box').css('.content').css('h4::text').extract()
+        dateArray = []
+        dayArray = []
+        monthArray = []
+        for i in range(len(initialArray)):
+            if i % 2 == 0:
+                dateArray.append(initialArray[i])
+
+        for date in dateArray:
+            head, sep, tail = date.partition(' ')
+            head, sep, tail = tail.partition(' ')
+            monthArray.append(head)
+            onlyInt = re.split('(\d+)',tail)
+            dayArray.append(onlyInt[1])
+        self.changeMonthAbbrev(monthArray)
+
+        # send data to pipeline
+        for i in range(len(artists)):
+            item = ConcertItem()
+            item['venue'] = "The Complex"
+            item['artist'] = artists[i]
+            item['month'] = monthArray[i]
+            item['day'] = dayArray[i]
+            item['year'] = self.currentYear
+            item['image'] = images[i]
+            item['ticket_link'] = ticket_links[i]
+            yield item
+
+    # Metro Music Hall
+    def parseMetro(self, response):
+        artists = response.css('.list-view-details').css('.headliners').css('a::text').extract()
+        # Returns day of week and date as 9/19
+        dateArray = response.css('.list-view-details').css('.dates::text').extract()
+        monthArray = []
+        dayArray = []
+        # separate out month from day
+        for date in dateArray:
+            head, sep, tail = date.partition(', ')
+            head, sep, tail = tail.partition('/')
+            monthArray.append(head)
+            dayArray.append(tail)
+        self.changeNumberToMonthName(monthArray)
+        images = response.css('.list-view-item').css('a').css('img::attr(src)').extract()
+        ticket_links = response.css('.ticket-link').css('.primary-link').css('a::attr(href)').extract()
+        # send data to pipeline
+        for i in range(len(artists)):
+            item = ConcertItem()
+            item['venue'] = "Metro Music Hall"
+            item['artist'] = artists[i]
+            item['month'] = monthArray[i]
+            item['day'] = dayArray[i]
+            item['year'] = self.currentYear
+            item['image'] = images[i]
+            # Sometimes ticket_link array errors 'list index out of range'
+            item['ticket_link'] = ticket_links[i]
+            yield item
+
+        #  The Urban Lounge
+    def parseUrbanL(self, response):
+        artists = response.css(".list-view-details").css(".headliners").css("a::text").extract()
+        # Returns array with day of week, month/day
+        dateArray = response.css(".list-view-details").css(".dates::text").extract()
+        # Separate month from day
+        monthArray = []
+        dayArray = []
+        for date in dateArray:
+            head, sep, tail = date.partition(', ')
+            head, sep, tail = tail.partition('/')
+            monthArray.append(head)
+            dayArray.append(tail)
+        self.changeNumberToMonthName(monthArray)
+        images = response.css('.list-view-item').css('a').css('img::attr(src)').extract()
+        ticket_links = response.css('.ticket-price').css('a::attr(href)').extract()
+        # send data to pipeline
+        for i in range(len(artists)):
+            item = ConcertItem()
+            item['venue'] = "The Urban Lounge"
+            item['artist'] = artists[i]
+            item['month'] = monthArray[i]
+            item['day'] = dayArray[i]
+            item['year'] = self.currentYear
+            item['image'] = images[i]
+            item['ticket_link'] = ticket_links[i]
+            yield item
+
+    # Soundwell -JS rendered page
+    # def parseSoundwell(self, response):
+    #     print("In parseSoundwell function")
+    #     print(response.css('h3::text').extract())
+
+    def changeMonthAbbrev(self,months):
         # Change month abbreviations to full name
         for i in range(len(months)):
             if months[i] == "Jan":
@@ -325,58 +425,51 @@ class ConcertsSpider(scrapy.Spider):
                 months[i] = "November"
             elif months[i] == "Dec":
                 months[i] = "December"
-        # If a sold out show exists
-        differenceInLengths = len(artists) - len(ticket_links)
-        if differenceInLengths >= 1:
-            for i in range(0,differenceInLengths):
-                ticket_links.append("https://theunioneventcenter.com/upcomingevents/")
-        # Send data to pipeline
-        for i in range(len(artists)):
-            item = ConcertItem()
-            item['venue'] = "The Union"
-            item['artist'] = artists[i]
-            item['month'] = months[i]
-            item['day'] = days[i]
-            item['year'] = self.currentYear
-            item['image'] = images[i]
-            item['ticket_link'] = ticket_links[i]
-            yield item
+        return months
+    
+    def changeNumberToMonthName(self, monthArray):
+        for i in range(len(monthArray)):
+            if monthArray[i] == '1' or monthArray[i] == '01':
+                monthArray[i] = "January"
+            elif monthArray[i] == '2' or monthArray[i] == '02':
+                monthArray[i] = "February"
+            elif monthArray[i] == '3' or monthArray[i] == '03':
+                monthArray[i] = "March"
+            elif monthArray[i] == '4' or monthArray[i] == '04':
+                monthArray[i] = "April"
+            elif monthArray[i] == '5' or monthArray[i] == '05':
+                monthArray[i] = "May"
+            elif monthArray[i] == '6' or monthArray[i] == '06':
+                monthArray[i] = "June"
+            elif monthArray[i] == '7' or monthArray[i] == '07':
+                monthArray[i] = "July"
+            elif monthArray[i] == '8' or monthArray[i] == '08':
+                monthArray[i] = "August"      
+            elif monthArray[i] == '9' or monthArray[i] == '09':
+                monthArray[i] = "September"
+            elif monthArray[i] == '10':
+                monthArray[i] = "October"
+            elif monthArray[i] == '11':
+                monthArray[i] = "November"
+            elif monthArray[i] == '12':
+                monthArray[i] = "December"
+        return monthArray
 
-    # TODO
-    # USANA??? What the H happened to its website?
-    #  ---TODO--
-    # Park City Live
-    # The Union
-    # City Park, Cherry Peak Resort, Deer Valley
-    # Saltair
-    # Ogden Twilight
-    # Kingsbury Hall
-    # The Complex
-    # Metro Music Hall
-    # Sky SLC?? DJs
-    # In the Venue
-    # DeJoria Center
-    # UVU center
-    # Rice-Eccles Stadium
-    # Lavell Edwards Stadium? Besides stadium of fire?
-    # Scera Shell
-    # Urban Lounge
-    # Eccles Theater
-    # Snow Basin Resort
-    # Snow Park Amphitheater
-    # Living Arenas
-    # Utah Cultural Celebration Center
-    # Velour
-    # The Post Theater
-    # Soundwell
-    # The Royal
-    # Tuacahn Amphitheater
-
-#    TODO 
-# Add Kenley Amphitheater 
-# Add Sandy Amphitheater
+# TODO Add these sites to be scraped in version 2.0
+# Kenley Amphitheater 
+# Sandy Amphitheater
 # BlueBird Concert Series
 # Red Butte Garden
+# Ogden Twilight
+# Saltair
+# Park City Live
+# City Park, Cherry Peak Resort, Deer Valley
+# Utah Symphony??
+# Sky SLC?
+# In the venue...couldn't access website
+# Snow Park Amphitheater -- http://www.deervalley.com/WhatToDo/Summer/Amphitheater -- http://www.parkcitylivemusic.com/venues/snow-park-outdoor-amphitheater-at-deer-valley-resort
+
+
 
 # Kenley Amphitheater ---- http://www.davisarts.org/summer-concert-series/
     # ---artists---delete the last one because it brings up Subscription Details and not an artist
