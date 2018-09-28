@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css?family=Quicksand|Merriweather');
+.query-results {
+    height: 400px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.heading-font {
+    font-family: 'Merriweather', serif;    
+}

@@ -93,7 +93,10 @@ class ConcertsSpider(scrapy.Spider):
                 continue
             else:
                 dayArray.append(tail)
-    
+        # change month name to int for db
+        monthArray = self.changeMonthNameToNumber(monthArray)
+        # change days to int for db
+        dayArray = list(map(int, dayArray))
         ticket_links = response.css(".ohanah-registration-link").css("a::attr(href)").extract()
         # --images-- must put http://thestateroom.com before the link
         images = response.css(".ohanah_modal::attr(href)").extract()
@@ -116,6 +119,8 @@ class ConcertsSpider(scrapy.Spider):
         
         artists = response.css(".title").css("h5::text").extract()
         days = response.css(".date").css("em::text").extract()
+        # change days (strings) to int for db
+        days = list(map(int, days))
         images = response.css(".synopsis").css("img::attr(src)").extract()
         # ticket_links get extracted as 'url', '/tickets', 'url', '/tickets.  Ignore the '/tickets'
         ticket_links = []
@@ -169,8 +174,10 @@ class ConcertsSpider(scrapy.Spider):
             head, sep, tail = tail.partition('.')
             monthArray.append(head)
             dayArray.append(tail)
-        # change number to month name
-        self.changeNumberToMonthName(monthArray)
+        # resulting month number is a string - make it an int
+        monthArray = list(map(int, monthArray))
+        # change day number string to an int
+        dayArray = list(map(int, dayArray))
         images = response.css(".list-view-item").css('a').css('img::attr(src)').extract()
         ticket_links = response.css(".ticket-link").css("a::attr(href)").extract()
         # If a show is sold out then the ticket_link goes away
@@ -202,10 +209,13 @@ class ConcertsSpider(scrapy.Spider):
             head, sep, tail = tail.partition('/')
             monthArray.append(head)
             dayArray.append(tail)
-        # Change number to month name
-        self.changeNumberToMonthName(monthArray)
+        # Change month name to a number for db
+        monthArray = self.changeMonthNameToNumber(monthArray)
+        # Change day str to int
+        dayArray = list(map(int, dayArray))
         images = response.css('.list-view-item').css('a').css('img::attr(src)').extract()
         ticket_links = response.css(".ticket-link").css("a::attr(href)").extract()
+        # Data to send to pipelines.py
         for i in range(len(artists)):
             item = ConcertItem()
             item['venue'] = "Kilby Court"
@@ -235,6 +245,10 @@ class ConcertsSpider(scrapy.Spider):
             head, sep, tail = tail.partition(', ')
             dayArray.append(head)
             yearArray.append(tail)
+        # Change month name to number for db
+        monthArray = self.changeMonthNameToNumber(monthArray)
+        # Change day str to int
+        dayArray = list(map(int, dayArray))
         images = response.css('.image').css('img::attr(src)').extract()
         ticketArray = response.css(".buttons").css("a::attr(href)").extract()
         ticket_links = []
@@ -264,8 +278,10 @@ class ConcertsSpider(scrapy.Spider):
         days = response.css(".eventlist-datetag-startdate--day::text").extract()
         images = response.css('.eventlist-event--upcoming').css('img::attr(data-src)').extract()
         ticket_links = response.css('.eventlist-event--upcoming').css('.eventlist-column-info').css('.eventlist-excerpt').css('a::attr(href)').extract()
-        # Change month abbreviations to full name
-        self.changeMonthAbbrev( months)
+        # Change month abbreviations to number
+        months = self.changeMonthNameToNumber(months)
+        # Change days strings to ints
+        days = list(map(int, days))
         # If a sold out show exists
         differenceInLengths = len(artists) - len(ticket_links)
         if differenceInLengths >= 1:
@@ -291,8 +307,10 @@ class ConcertsSpider(scrapy.Spider):
         days = response.css(".eq-ht").css('.event-day::text').extract()
         images = response.css(".eq-ht").css('img::attr(src)').extract()
         ticket_links = response.css(".eq-ht").css('a::attr(href)').extract()
-        # change month abbreviations to full name
-        self.changeMonthAbbrev(months)
+        # change month abbreviations to number
+        months = self.changeMonthNameToNumber(months)
+        # Change days strings to ints
+        days = list(map(int, days))
         # send data to pipeline
         for i in range(len(artists)):
             item = ConcertItem()
@@ -324,7 +342,10 @@ class ConcertsSpider(scrapy.Spider):
             monthArray.append(head)
             onlyInt = re.split('(\d+)',tail)
             dayArray.append(onlyInt[1])
-        self.changeMonthAbbrev(monthArray)
+        # Change month name to an int for db
+        monthArray = self.changeMonthNameToNumber(monthArray)
+        # Change day strings to ints
+        dayArray = list(map(int, dayArray))
 
         # send data to pipeline
         for i in range(len(artists)):
@@ -351,7 +372,10 @@ class ConcertsSpider(scrapy.Spider):
             head, sep, tail = tail.partition('/')
             monthArray.append(head)
             dayArray.append(tail)
-        self.changeNumberToMonthName(monthArray)
+        # Change month name to an int for db
+        monthArray = self.changeMonthNameToNumber(monthArray)
+        # Change day string to int
+        dayArray = list(map(int, dayArray))
         images = response.css('.list-view-item').css('a').css('img::attr(src)').extract()
         ticket_links = response.css('.ticket-link').css('.primary-link').css('a::attr(href)').extract()
         # send data to pipeline
@@ -380,7 +404,10 @@ class ConcertsSpider(scrapy.Spider):
             head, sep, tail = tail.partition('/')
             monthArray.append(head)
             dayArray.append(tail)
-        self.changeNumberToMonthName(monthArray)
+        # change month number from string to int
+        monthArray = list(map(int, monthArray))
+        # change day number from str to int
+        dayArray = list(map(int, dayArray))
         images = response.css('.list-view-item').css('a').css('img::attr(src)').extract()
         ticket_links = response.css('.ticket-price').css('a::attr(href)').extract()
         # send data to pipeline
@@ -399,62 +426,36 @@ class ConcertsSpider(scrapy.Spider):
     # def parseSoundwell(self, response):
     #     print("In parseSoundwell function")
     #     print(response.css('h3::text').extract())
-
-    def changeMonthAbbrev(self,months):
-        # Change month abbreviations to full name
-        for i in range(len(months)):
-            if months[i] == "Jan":
-                months[i] = "January"
-            elif months[i] == "Feb":
-                months[i] = "February"
-            elif months[i] == "Mar":
-                months[i] = "March"
-            elif months[i] == "Apr":
-                months[i] = "April"
-            elif months[i] == "Jun":
-                months[i] = "June"
-            elif months[i] == "Jul":
-                months[i] = "July"
-            elif months[i] == "Aug":
-                months[i] = "August"
-            elif months[i] == "Sep":
-                months[i] = "September"
-            elif months[i] == "Oct":
-                months[i] = "October"
-            elif months[i] == "Nov":
-                months[i] = "November"
-            elif months[i] == "Dec":
-                months[i] = "December"
-        return months
     
-    def changeNumberToMonthName(self, monthArray):
-        for i in range(len(monthArray)):
-            if monthArray[i] == '1' or monthArray[i] == '01':
-                monthArray[i] = "January"
-            elif monthArray[i] == '2' or monthArray[i] == '02':
-                monthArray[i] = "February"
-            elif monthArray[i] == '3' or monthArray[i] == '03':
-                monthArray[i] = "March"
-            elif monthArray[i] == '4' or monthArray[i] == '04':
-                monthArray[i] = "April"
-            elif monthArray[i] == '5' or monthArray[i] == '05':
-                monthArray[i] = "May"
-            elif monthArray[i] == '6' or monthArray[i] == '06':
-                monthArray[i] = "June"
-            elif monthArray[i] == '7' or monthArray[i] == '07':
-                monthArray[i] = "July"
-            elif monthArray[i] == '8' or monthArray[i] == '08':
-                monthArray[i] = "August"      
-            elif monthArray[i] == '9' or monthArray[i] == '09':
-                monthArray[i] = "September"
-            elif monthArray[i] == '10':
-                monthArray[i] = "October"
-            elif monthArray[i] == '11':
-                monthArray[i] = "November"
-            elif monthArray[i] == '12':
-                monthArray[i] = "December"
+    def changeMonthNameToNumber(self, monthArray):
+        for in range(len(monthArray)):
+            if monthArray[i] == "January" or monthArray[i] =="Jan":
+                monthArray[i] = 1
+            elif monthArray[i] == "February" or monthArray[i] =="Feb":
+                monthArray[i] = 2
+            elif monthArray[i] == "March" or monthArray[i] =="Mar":
+                monthArray[i] = 3
+            elif monthArray[i] == "April" or monthArray[i] =="Apr":
+                monthArray[i] = 4
+            elif monthArray[i] == "May":
+                monthArray[i] = 5
+            elif monthArray[i] == "June" or monthArray[i] =="Jun":
+                monthArray[i] = 6
+            elif monthArray[i] == "July" or monthArray[i] =="Jul":
+                monthArray[i] = 7
+            elif monthArray[i] == "August" or monthArray[i] =="Aug":
+                monthArray[i] = 8
+            elif monthArray[i] == "September" or monthArray[i] =="Sep" or monthArray[i] == "Sept":
+                monthArray[i] = 9
+            elif monthArray[i] == "October" or monthArray[i] == "Oct":
+                monthArray[i] = 10
+            elif monthArray[i] == "November" or monthArray[i] == "Nov":
+                monthArray[i] = 11
+            elif monthArray[i] == "December" or monthArray[i] == "Dec":
+                monthArray[i] = 12
         return monthArray
 
+   
 # TODO Add these sites to be scraped in version 2.0
 # Kenley Amphitheater 
 # Sandy Amphitheater

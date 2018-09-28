@@ -1,0 +1,10 @@
+{% for concert in concerts %}  
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 query-results">
+    <img class="img-rounded" width="200" height="200" src = '{{concert.image}}' alt="artist picture"/>
+    <p>{{concert.concerts}}</p>
+    <p class = "h3">{{concert.artist}}</p>
+    <p class = "h4">{{concert.month}} {{concert.day}}, {{concert.year}}</p>
+    <p class = "h5">{{concert.venue.venue_name}}</p>
+    <a href = '{{concert.ticket_link}}'><button class="btn btn-primary text-center">Buy Tickets</button></a>
+</div>
+{% endfor %}
