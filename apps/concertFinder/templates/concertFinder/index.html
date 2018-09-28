@@ -49,23 +49,20 @@
                             }
                         }) 
                     })
+                    // Show all concerts
+                    $("#showAll").click(function(){
+                        $("#ajax_venue_name").val("")
+                        $("#ajax_artist_name").val("")
+                        $.ajax({
+                            url:'/showAll',
+                            method: "get",
+                            success: function(serverResponse){
+                                console.log("success")
+                                $("#placeholder1").html(serverResponse)
+                            }
+                        })
+                    })
 
-            
-                    // $('#button').click(function(){
-                    //     // console.log("Pressed button")
-                    //     console.log("HEEYYYY")
-                    //     $.ajax({
-                    //         url: "/filterbyvenue",
-                    //         method: "get",
-                    //         // data:$(this).parent.serialize(),
-                    //         success: function(serverResponse) {
-                    //             console.log('success. serverResponse:', serverResponse)
-                    //             $('#placeholder1').html(serverResponse)
-                    //         }
-                            
-                    //     })                
-            
-                    // })
                 })
     </script>
     
@@ -73,26 +70,26 @@
 <body>
     <div class="container">
         <div class="row mx-auto">
-            <h1 class="h1 text-center">Upcoming Concerts</h1>
+            <h1 class="h1 text-center heading-font">Upcoming Concerts</h1>
         </div>
         <div class="row mx-auto">
-            <h3>Type to Filter Results</h3>
+            <h3 class="heading-font">Type to Filter Results</h3>
         </div>
         <div id ="filter" class="row">
             <!-- Venue Filter -->
-            <h4>By Venue</h4>
+            <h4 class="heading-font">By Venue</h4>
             <form class="form-horizontal" method="POST">
                 {% csrf_token %}
-                <input type="text" name="venue_starts_with" id = "ajax_venue_name">
+                <input type="text" class = "form-control" name="venue_starts_with" id = "ajax_venue_name">
             </form>
             <!-- Artist Filter -->
-            <h4>By Artist</h4>
+            <h4 class="heading-font">By Artist</h4>
             <form class="form-horizontal" method="POST">
                     {% csrf_token %}
-                    <input type="text" name="artist_starts_with" id = "ajax_artist_name">
+                    <input type="text" class = "form-control" name="artist_starts_with" id = "ajax_artist_name">
             </form>
             <!-- Date Filter -->
-            <h4>By Date</h4>
+            <h4 class="heading-font">By Date</h4>
             <form class="form-horizontal" method="POST">
                     {% csrf_token %}
                     <select id = "ajax_month" class="form-control" name ="month">
@@ -111,21 +108,28 @@
                     </select>
             </form>
         </div>
-        <div id="placeholder1"></div>
-        <div id="query_results" class = "row col-12 col-lg-10">
-            {% for concert in concerts %}
-            <!--
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                <img class="img-rounded" width="200" height="200" src = '{{concert.image}}' alt="artist picture"/>
-                <p>{{concert.concerts}}</p> -->
-                <!-- <p class = "h3">{{concert.artist}}</p>
+        <!-- Show all concerts button -->
+        <div>
+            <button id="showAll" name="showConcerts" class="btn btn-primary">Show All Concerts</button>
+            <form action="/destroy" method="POST">
+                {% csrf_token %}
+                <button id="delete" name="deleteButton" class="btn btn-danger">Delete Old Concerts</button>
+            </form>
+        </div>
+        <div id="placeholder1">
+            {% for concert in concerts %}  
+                <div class="col-12 col-sm-6 col-md-3 col-lg-3 query-results" style="height: 400px; margin: 5px;">
+                    <img class="img-rounded" width="200" height="200" src = '{{concert.image}}' alt="artist picture"/>
+                    <p>{{concert.concerts}}</p>
+                    <p class = "h3">{{concert.artist}}</p>
                     <p class = "h4">{{concert.month}} {{concert.day}}, {{concert.year}}</p>
-                <p class = "h5">{{concert.venue.venue_name}}</p>
-                <a href = '{{concert.ticket_link}}'><button class="btn btn-primary text-center">Buy Tickets</button></a>
-            </div> -->
+                    <p class = "h5">{{concert.venue.venue_name}}</p>
+                    <a href = '{{concert.ticket_link}}'><button class="btn btn-primary text-center">Buy Tickets</button></a>
+                </div>
             {% endfor %}
         </div>
-        
+       
+        <!-- Show up only for Kevin -->
         <div class = "row col-12 col-md-8 col-lg-6 form-group" id="form">
             <form class = "form-horizontal" action="/concerts" method="POST">
                 {% csrf_token %}
