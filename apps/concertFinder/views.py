@@ -5,12 +5,24 @@ from concertInfoSpider.concertInfoSpider.items import ConcertItem
 from .models import *
 
 def index(request):
-    response = "Hello, I'm first request"
     context = {
-        'item': ConcertItem,
-        'concerts': ConcertInfo.objects.all()
+        'concerts': ConcertInfo.objects.all(),
     }
     return render(request, "concertFinder/index.html", context)
+
+def filterByVenue(request):
+    concerts = ConcertInfo.objects.filter(venue__venue_name__startswith = request.POST['venue_starts_with'])
+    return render(request, ('concertFinder/filtered.html'), {'concerts':concerts})
+
+def filterByArtist(request):
+    concerts = ConcertInfo.objects.filter(artist__startswith = request.POST['artist_starts_with'])
+    return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
+
+def filterByDate(request):
+    print(request.POST['month'])
+    concerts = ConcertInfo.objects.filter(month__startswith = request.POST['month']).order_by("year").order_by("day")
+    return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
+
 # don't create duplicate concerts
 def create(request):
     if request.method == "POST":

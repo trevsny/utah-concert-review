@@ -25,4 +25,6 @@ class ConcertInfo(models.Model):
     updated_at = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return self.artist, self.venue, self.month, self.day, self.year
+        template = '{0.artist}'
+        return template.format(self)
+ 
