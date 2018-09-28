@@ -9,8 +9,11 @@ import scrapy
 
 class ConcertItem(scrapy.Item):
     # define the fields for your item here like:
+    venue = scrapy.Field()
     artist = scrapy.Field()
     month = scrapy.Field()
     day = scrapy.Field()
+    year = scrapy.Field()
+    image = scrapy.Field()
     ticket_link = scrapy.Field()
     
