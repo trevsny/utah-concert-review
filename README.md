@@ -4,8 +4,9 @@ Django crud app using scrapy
 An effort to scrape concert data from multiple concert venue websites and input them into a database as an aggregate for users to utilize.
 
 # Dependencies
-Django
-Scrapy
+* Django 1.8
+* Python 3.7
+* Scrapy 1.5
 
 # Description
 Web application where client side features input text boxes that make ajax calls to the views.py that filter the database and retrieve records based off user input in order of current date.
