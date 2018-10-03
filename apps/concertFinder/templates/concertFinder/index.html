@@ -63,6 +63,17 @@
                         })
                     })
 
+                    $("#scrape").click(function(){
+                        $.ajax({
+                            url: '/scrape',
+                            method: "post",
+                            success: function(serverResponse){
+                                console.log("Success")
+                                $("#placeholder1").html(serverResponse)
+                            }
+                        })
+                    })
+
                 })
     </script>
     
@@ -80,16 +91,16 @@
             <h4 class="heading-font">By Venue</h4>
             <form class="form-horizontal" method="POST">
                 {% csrf_token %}
-                <input type="text" class = "form-control" name="venue_starts_with" id = "ajax_venue_name">
+                <input type="text" class = "form-control" name="venue_starts_with" id = "ajax_venue_name" placeholder="Starts with...">
             </form>
             <!-- Artist Filter -->
             <h4 class="heading-font">By Artist</h4>
             <form class="form-horizontal" method="POST">
                     {% csrf_token %}
-                    <input type="text" class = "form-control" name="artist_starts_with" id = "ajax_artist_name">
+                    <input type="text" class = "form-control" name="artist_starts_with" id = "ajax_artist_name" placeholder="Starts with...">
             </form>
             <!-- Date Filter -->
-            <h4 class="heading-font">By Date</h4>
+            <h4 class="heading-font">By Month</h4>
             <form class="form-horizontal" method="POST">
                     {% csrf_token %}
                     <select id = "ajax_month" class="form-control" name ="month">
@@ -111,10 +122,13 @@
         <!-- Show all concerts button -->
         <div>
             <button id="showAll" name="showConcerts" class="btn btn-primary">Show All Concerts</button>
-            <form action="/destroy" method="POST">
+            <form action="/destroy" method="POST" class="form-horizontal">
                 {% csrf_token %}
                 <button id="delete" name="deleteButton" class="btn btn-danger">Delete Old Concerts</button>
             </form>
+            <!-- <form action="/scrape" method="GET" class="form-horizontal"> -->
+                <button id="scrape" name="scrapeConcerts" class="btn btn-info">Look for more concerts</button>
+            <!-- </form> -->
         </div>
         <div id="placeholder1">
             {% for concert in concerts %}  
