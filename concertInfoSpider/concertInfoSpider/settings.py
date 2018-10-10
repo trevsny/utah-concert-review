@@ -18,7 +18,7 @@ django.setup()
 #     https://doc.scrapy.org/en/latest/topics/settings.html
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-
+# SCRAPY_SETTINGS_MODULE = 'concertInfoSpider.settings'
 BOT_NAME = 'concertInfoSpider'
 
 SPIDER_MODULES = ['concertInfoSpider.spiders']
@@ -68,9 +68,9 @@ TELNETCONSOLE_ENABLED = False
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'concertInfoSpider.middlewares.ConcertinfospiderSpiderMiddleware': 543,
-#}
+SPIDER_MIDDLEWARES = {
+   'concertInfoSpider.middlewares.ConcertinfospiderSpiderMiddleware': 543,
+}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html

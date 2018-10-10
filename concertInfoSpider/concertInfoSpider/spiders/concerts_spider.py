@@ -5,8 +5,7 @@ import re
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError, TCPTimedOutError
-# Need to figure out file path to import the Concert model in order to save to db
-from concertInfoSpider.items import ConcertItem 
+from concertInfoSpider.concertInfoSpider.items import ConcertItem 
 from datetime import datetime
 
 class ConcertsSpider(scrapy.Spider):
@@ -62,6 +61,7 @@ class ConcertsSpider(scrapy.Spider):
     # State Room parse -- was called parseSR
 
     def parseSR(self, response):
+        print("Inside parseSR function")
         venue = "The State Room"
         artists = response.css(".event_detail_title").css("span::text").extract()
         dates = response.css("h3").css("span::text").extract()
@@ -97,6 +97,8 @@ class ConcertsSpider(scrapy.Spider):
         monthArray = self.changeMonthNameToNumber(monthArray)
         # change days to int for db
         dayArray = list(map(int, dayArray))
+        # change years (strings) to int for db
+        yearArray = list(map(int, yearArray))
         ticket_links = response.css(".ohanah-registration-link").css("a::attr(href)").extract()
         # --images-- must put http://thestateroom.com before the link
         images = response.css(".ohanah_modal::attr(href)").extract()
@@ -141,7 +143,7 @@ class ConcertsSpider(scrapy.Spider):
             item = ConcertItem()
             item['venue'] = "Vivint Arena"
             item['artist'] = artists[i]
-            item['month'] = "Manually input"
+            item['month'] = 0
             item['day'] = days[i]
             item['year'] = self.currentYear
             item['image'] = images[i]
@@ -149,6 +151,7 @@ class ConcertsSpider(scrapy.Spider):
             yield item
     # Note to self.  Must manually input month names for all Vivint concerts
     def parseEgyptian(self, response):
+        print("Inside parseEgyptian function")
         artists = response.css(".event_info").css("h2::text").extract()
         images = response.css('.flyer').css('a').css('img::attr(src)').extract()
         ticket_links = response.css(".event_info").css("a::attr(href)").extract()
@@ -156,14 +159,15 @@ class ConcertsSpider(scrapy.Spider):
             item = ConcertItem()
             item['venue'] = "The Egyptian"
             item['artist'] = artists[i]
-            item['month'] = "Manually input"
-            item['day'] = "Manually input"
+            item['month'] = 0
+            item['day'] = 0
             item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
     # The Commonwealth Room
     def parseCommon(self, response):
+        print("Inside parseCommon function")
         artists = response.css(".headliners.summary").css('a::text').extract()
         initialArray = response.css(".dates::text").extract()
         monthArray = []
@@ -199,6 +203,7 @@ class ConcertsSpider(scrapy.Spider):
 
     # Kilby Court
     def parseKilby(self, response):
+        print("Inside parseKilby function")
         artists = response.css(".headliners.summary").css('a::text').extract()
         initialArray = response.css(".dates::text").extract()
         monthArray = []
@@ -229,6 +234,7 @@ class ConcertsSpider(scrapy.Spider):
 
     # Maverik Center
     def parseMaverik(self, response):
+        print("Inside parseMaverik function")
         artists = response.css(".data-info").css("h4::text").extract()
         initialArray = response.css(".data-info").css("h5::text").extract()
         dateArray = []
@@ -247,8 +253,10 @@ class ConcertsSpider(scrapy.Spider):
             yearArray.append(tail)
         # Change month name to number for db
         monthArray = self.changeMonthNameToNumber(monthArray)
-        # Change day str to int
+        # Change day str to int for db
         dayArray = list(map(int, dayArray))
+        # Change year str to int for db
+        yearArray = list(map(int, yearArray))
         images = response.css('.image').css('img::attr(src)').extract()
         ticketArray = response.css(".buttons").css("a::attr(href)").extract()
         ticket_links = []
@@ -273,6 +281,7 @@ class ConcertsSpider(scrapy.Spider):
 
     # The Union event center
     def parseUnion(self, response):
+        print("Inside parseUnion function")
         artists = response.css('.eventlist-event--upcoming').css('h1').css('a::text').extract()
         months = response.css(".eventlist-datetag-startdate--month::text").extract()
         days = response.css(".eventlist-datetag-startdate--day::text").extract()
@@ -301,6 +310,7 @@ class ConcertsSpider(scrapy.Spider):
 
     # Kingsbury Hall
     def parseKingsbury(self, response):
+        print("Inside parseKingsbury function")
         venues = response.css(".eq-ht").css('.venue::text').extract()
         artists = response.css(".eq-ht").css('h3::text').extract()
         months = response.css(".eq-ht").css('.event-month::text').extract()
@@ -324,6 +334,7 @@ class ConcertsSpider(scrapy.Spider):
             yield item
     # The Complex
     def parseComplex(self, response):
+        print("Inside parseComplex function")
         artists = response.css('.inner-box').css('.content').css('h3::text').extract()
         images = response.css('.portfolio-item').css('.image-box').css('img::attr(src)').extract()
         ticket_links = response.css('.inner-box').css('.content').css('a::attr(href)').extract()
@@ -361,6 +372,7 @@ class ConcertsSpider(scrapy.Spider):
 
     # Metro Music Hall
     def parseMetro(self, response):
+        print("Inside parseMetro function")
         artists = response.css('.list-view-details').css('.headliners').css('a::text').extract()
         # Returns day of week and date as 9/19
         dateArray = response.css('.list-view-details').css('.dates::text').extract()
@@ -393,6 +405,7 @@ class ConcertsSpider(scrapy.Spider):
 
         #  The Urban Lounge
     def parseUrbanL(self, response):
+        print("Inside parseUrban function")
         artists = response.css(".list-view-details").css(".headliners").css("a::text").extract()
         # Returns array with day of week, month/day
         dateArray = response.css(".list-view-details").css(".dates::text").extract()
@@ -428,7 +441,7 @@ class ConcertsSpider(scrapy.Spider):
     #     print(response.css('h3::text').extract())
     
     def changeMonthNameToNumber(self, monthArray):
-        for in range(len(monthArray)):
+        for i in range(len(monthArray)):
             if monthArray[i] == "January" or monthArray[i] =="Jan":
                 monthArray[i] = 1
             elif monthArray[i] == "February" or monthArray[i] =="Feb":
@@ -455,7 +468,7 @@ class ConcertsSpider(scrapy.Spider):
                 monthArray[i] = 12
         return monthArray
 
-   
+
 # TODO Add these sites to be scraped in version 2.0
 # Kenley Amphitheater 
 # Sandy Amphitheater

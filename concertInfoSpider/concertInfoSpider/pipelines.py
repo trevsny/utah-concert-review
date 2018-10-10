@@ -5,22 +5,21 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 from scrapy.exceptions import DropItem
-from concertInfoSpider.items import ConcertItem
-from concertInfoSpider.spiders.concerts_spider import *
+from concertInfoSpider.concertInfoSpider.items import ConcertItem
+from concertInfoSpider.concertInfoSpider.spiders.concerts_spider import *
 from apps.concertFinder.models import *
 
 class ConcertinfospiderPipeline(object):
     # def __init__(self):
-        # self.setupDBCon()
-        # self.createTables()
-
+    
     # these functions are available in the pipeline
     # def from_crawler(cls, crawler):
    
     # def close_spider(self, spider):
     
-    # TODO don't create duplicate item if already scraped that page
+
     def process_item(self, item, spider):
+        print("In process_item function")
         venues = ConcertVenue.objects.all()   
         existingConcerts = ConcertInfo.objects.all()
         # Check if concert already saved in db

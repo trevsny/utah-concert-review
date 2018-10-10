@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^filterbyartist', views.filterByArtist),
     url(r'^filterbydate', views.filterByDate),
     url(r'^showAll', views.showAllConcerts),
-    url(r'^destroy', views.destroy)
+    url(r'^destroy', views.destroy),
+    url(r'^scrape', views.scrape)
     
 ]
