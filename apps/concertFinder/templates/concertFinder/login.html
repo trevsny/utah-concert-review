@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Upcoming Concerts</title>
+    {% load static %}
+    <!-- Import JQuery, bootstrap, css, etc. -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type = "text/css" href = "{% static 'styles.css'%}">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row mx-auto">
+            <h1 class="text-center heading-font">Upcoming Concerts</h1>
+        </div>
+        <div class = "mx-auto col-12 col-md-4" id="login">
+            <h1 class = "heading-font" >Login</h1>
+            <form class = "form-horizontal" action="/gologin" method="POST">
+                {% csrf_token %}
+                <h4 class = "heading-font">Username:</h4>
+                <input class = "form-control" type="text" name="login_username">               
+                <h4 class = "heading-font">Password:</h4>
+                <input class = "form-control" type="password" name="login_password">
+                <input class = "btn btn-primary btn-block" type="submit" value="Login" style="margin-top:20px;">
+            </form>
+            {% if messages %}
+            {% for message in messages %}
+            
+            <p style = "color: white;">{{message}}</p>
+            {% endfor %}
+            {% endif %}
+            
+        </div>
+    </div>
+
+
+
+    
+    </body>
+</html>

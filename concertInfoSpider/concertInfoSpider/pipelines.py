@@ -6,17 +6,17 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 from scrapy.exceptions import DropItem
 from concertInfoSpider.concertInfoSpider.items import ConcertItem
+# For production change back to from concertInfoSpider.concertInfoSpider.items import ConcertItem
+# For Scrapy Shell need just concertInfoSpider.items import ConcertItem
 from concertInfoSpider.concertInfoSpider.spiders.concerts_spider import *
+# For production change back to from concertInfoSpider.concertInfoSpider.spiders.concerts_spider import *
+# For Scrapy Shell need just concertInfoSpider.spiders.concerts_spider import *
 from apps.concertFinder.models import *
 
 class ConcertinfospiderPipeline(object):
-    # def __init__(self):
-    
     # these functions are available in the pipeline
     # def from_crawler(cls, crawler):
-   
     # def close_spider(self, spider):
-    
 
     def process_item(self, item, spider):
         print("In process_item function")
@@ -47,6 +47,7 @@ class ConcertinfospiderPipeline(object):
                 ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
                 return item
         else:
+            # If there are no concerts in the database then create this one
             newVenue = ConcertVenue.objects.create(venue_name = item['venue'])
             ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
             return item
