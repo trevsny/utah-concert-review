@@ -3,95 +3,244 @@ from __future__ import unicode_literals
 from django.shortcuts import render, HttpResponse, redirect
 from concertInfoSpider.concertInfoSpider.items import ConcertItem
 from .models import *
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from concertInfoSpider.concertInfoSpider.spiders.concerts_spider import *
-from scrapy.crawler import Crawler, CrawlerRunner, CrawlerProcess
+from scrapy.crawler import CrawlerProcess
 from scrapy.settings import Settings
-from scrapy import signals, cmdline
 from twisted.internet import reactor
-# import scrapy
-import runpy, cmd
-from scrapyd_api import ScrapydAPI
+from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
-import threading
-# from concertInfoSpider.concertInfoSpider.settings import *
-from scrapy.utils.project import get_project_settings 
-# ---Can't find this module ^^
+from django.views.decorators.clickjacking import xframe_options_exempt
 
-# connect scrapyd service
-# scrapyd = ScrapydAPI('http://localhost:6800')
-
+@xframe_options_exempt
 def index(request):
     concerts = ConcertInfo.objects.all().order_by("year","month", "day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
     return render(request, "concertFinder/index.html", {'concerts':concerts})
-
+@xframe_options_exempt
 def filterByVenue(request):
-    concerts = ConcertInfo.objects.filter(venue__venue_name__startswith = request.POST['venue_starts_with']).order_by("year", "month","day")
+    concerts = ConcertInfo.objects.filter(venue__venue_name__icontains = request.GET['venue_starts_with']).order_by("year", "month","day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
     return render(request, ('concertFinder/filtered.html'), {'concerts':concerts})
-
+@xframe_options_exempt
 def filterByArtist(request):
-    concerts = ConcertInfo.objects.filter(artist__startswith = request.POST['artist_starts_with']).order_by("year","month","day")
+    concerts = ConcertInfo.objects.filter(artist__icontains = request.GET['artist_starts_with']).order_by("year","month","day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
     return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
-
+@xframe_options_exempt
 def filterByDate(request):
-    print(request.POST['month'])
-    concerts = ConcertInfo.objects.filter(month__startswith = request.POST['month']).order_by("year", "month","day")
-    for concert in concerts:
-        concert.month = changeIntToMonthName(concert.month)
-    return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
-
+    print(request.GET['month'])
+    if request.GET['month'] == "Select Month":
+        return render(request, 'concertFinder/filtered.html')
+    else:
+        concerts = ConcertInfo.objects.filter(month__exact = request.GET['month']).order_by("year", "month","day")
+        for concert in concerts:
+            concert.month = changeIntToMonthName(concert.month)
+        return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
+@xframe_options_exempt
 def showAllConcerts(request):
     concerts = ConcertInfo.objects.all().order_by("year", "month","day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
-    return render(request, 'concertFinder/allConcerts.html', {'concerts': concerts})
-
+    return render(request, 'concertFinder/filtered.html', {'concerts': concerts})
 # don't create duplicate concerts
 def create(request):
+    # Function to get checkbox data
+    def checkboxes(newConcert):
+        notes = ConcertNote.objects.all()
+        # If notes already exist in db
+        if notes:
+            for note in notes:
+                if request.POST.get('note_attending') and request.POST.get('note_featured'):
+                    newConcert.note_attend = note
+                    newConcert.note_feature = note
+                    newConcert.save()
+                    break
+                elif request.POST.get('note_attending') and not request.POST.get('note_featured'):
+                    newConcert.note_attend = note
+                    newConcert.save()
+                    break
+                elif request.POST.get('note_featured') and not request.POST.get('note_attending'):
+                    newConcert.note_feature = note
+                    newConcert.save()
+                    break
+                else:
+                    return newConcert
+        # If notes doesn't exist - Creating one object in notes table - hard coded phrases
+        else:
+            newNote = ConcertNote.objects.create(note_attending = "We'll be there!", note_featured = "UCR Featured Concert")
+            if request.POST.get('note_attending') and request.POST.get('note_featured'):
+                newConcert.note_attend = newNote
+                newConcert.note_feature = newNote
+                newConcert.save()
+            elif request.POST.get('note_attending') and not request.POST.get('note_featured'):
+                newConcert.note_attend = newNote
+                newConcert.save()
+            elif request.POST.get('note_featured') and not request.POST.get('note_attending'):
+                newConcert.note_feature = newNote
+                newConcert.save()
+            else:
+                return newConcert
+    ##### end of checkboxes()
+
+    # post method validation inside def create(request) 
     if request.method == "POST":
+        # validations for form
+        error = False
+        if not request.POST['venue']:
+            messages.error(request, "Forgot the venue")
+            error = True
+        if not request.POST['artist']:
+            messages.error(request, "Forgot the artist")
+            error = True
+        if request.POST['month'] == '0':
+            messages.error(request, "Please choose month")
+            error = True
+        if request.POST['day'] == '0':
+            messages.error(request, "Please choose day")
+            error = True
+        if error:
+            return redirect('/success')
+        # create object
         venues = ConcertVenue.objects.all()
+        # Does venue already exist in db?
         for venue in venues:
             concertVenueExist = False
             if venue.venue_name == request.POST['venue']:
-                newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], image = request.POST['image'], ticket_link = request.POST['ticket_link'])
-                concertVenueExist = True
-                break
-                
+                if request.POST['year']:  #Check year was input
+                    if request.POST['image']: #Check for image input
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], year = int(request.POST['year']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                        concertVenueExist = True
+                        checkboxes(newConcert)
+                        break
+                    else:  #use default image src saved in models
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], year = int(request.POST['year']), ticket_link = request.POST['ticket_link'])
+                        concertVenueExist = True
+                        checkboxes(newConcert)
+                        break
+                else:  #no year input
+                    if request.POST['image']: #Check for image input
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                        checkboxes(newConcert)
+                        concertVenueExist = True
+                        break
+                    else: #use default image src saved in models
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], ticket_link = request.POST['ticket_link'])
+                        checkboxes(newConcert)
+                        concertVenueExist = True
+                        break
+        # if venue exists (aka True) then we already created object...send back to /success.  Otherwise venue does not exist already and we must create a new object with the new venue.
         if concertVenueExist:
-            return redirect('/') 
-        else:  
-            newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
-            newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], image = request.POST['image'], ticket_link = request.POST['ticket_link'])
-            return redirect('/')
-
-def destroy(request):
-    # concerts = ConcertInfo.objects.all()
-    if request.method == "POST":
-        deleteOldEntries()
-        return redirect('/')
+            messages.success(request, "Successfully created!")
+            return redirect('/success') 
+        else:
+            if request.POST['year']: 
+                newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
+                newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], year = int(request.POST['year']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                checkboxes(newConcert)
+                print("Is int")
+                messages.success(request, "Successfully created!")
+                return redirect('/success')
+            else:
+                newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
+                newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                checkboxes(newConcert)
+                print("Not an int")
+                messages.success(request, "Successfully created!")
+                return redirect('/success')
     else:
         return redirect('/')
+    
+
+def destroyOld(request):
+    # concerts = ConcertInfo.objects.all()
+    if request.method == "POST":
+        count = deleteOldEntries()
+        messages.success(request,"Deleted " + str(count) + " concert(s)")
+        return redirect('/success')
+    else:
+        return redirect('/login')
+
+# function to run 'scrapy crawl concerts' from a script
+@csrf_exempt
+def scrape(request):
+    if request.method == "POST":
+        # instantiate spider object
+        spider = ConcertsSpider()
+        # Instantiate Settings object
+        settings = Settings()
+        # set the settings of my spider
+        settings.set('ITEM_PIPELINES', {
+        'concertInfoSpider.concertInfoSpider.pipelines.ConcertinfospiderPipeline': 300, })
+        settings.set('TELNETCONSOLE_ENABLED', False)
+        settings.set('DOWNLOAD_DELAY', 2)
+        settings.set('BOT_NAME', 'concertInfoSpider')
+        settings.set('NEWSPIDER_MODULE', 'concertInfoSpider.concertInfoSpider.spiders')
+        settings.set('ROBOTSTXT_OBEY', True)
+        settings.set('SPIDER_MODULES', ['concertInfoSpider.concertInfoSpider.spiders'])
+        process = CrawlerProcess(settings = settings)
+        process.crawl(spider)
+        process.start()
+        return redirect('/showAll')
+    else:
+        return redirect('/')
+# Show login page
+def showLoginPage(request):
+    return render(request, 'concertFinder/login.html')
+
+# Login
+def login(request):
+    if request.method == "POST":
+        if request.POST['login_username'] == "Bestfriendkev27" and request.POST['login_password'] == "Knights08":
+            request.session['logged_in'] = True
+            return redirect('/success')
+        else:
+            messages.error(request, "Invalid credentials, Kev")
+            return redirect('/login')
+    else:
+        return redirect('/login')
+
+# Show kevin's html page
+def success(request):
+    if not 'logged_in' in request.session:
+        return redirect('/login')
+    else:
+        # concerts = ConcertInfo.objects.all().order_by("year","month", "day")
+        # for concert in concerts:
+        #     concert.month = changeIntToMonthName(concert.month)
+        return render(request, 'concertFinder/kevin.html')
+def logout(request):
+    if request.method == "POST":
+        try:
+            del request.session['logged_in']
+        except KeyError:
+            pass
+        return redirect('/login')
+    else:
+        return redirect('/')
+
 # Function to delete old database entries of concerts
 def deleteOldEntries():
     concerts = ConcertInfo.objects.all()
+    count = 0
     for concert in concerts:
         # Now check for old concerts
-        yesterday = datetime.today() - timedelta(1)
+        yesterday = date.today() - timedelta(1)
         try:
-            concertDate = datetime(concert.year, concert.month, concert.day)
+            concertDate = date(concert.year, concert.month, concert.day)
             if concertDate <= yesterday:
                 concertToDelete = ConcertInfo.objects.get(id = concert.id)
                 concertToDelete.delete()
-                print('successful deletion')
+                count = count + 1
+                # print('successful deletion')
         except ValueError:
-            print("In Value Error sections")
-    
+            # Months or days will be defaulted to 0 for some venues and those throw a ValueError upon attempted deletion
+            pass
+            print("In Value Error section")
+    return count
 def changeIntToMonthName(month):    
         if month == 1:
             month = "January"
@@ -118,79 +267,4 @@ def changeIntToMonthName(month):
         elif month == 12:
             month = "December"
         return month 
-# function to run 'scrapy crawl concerts' from a script
-@csrf_exempt
-def scrape(request):
-    if request.method == "POST":
-        print("in scrape function")
-        print(threading.current_thread())
-        print("List of threads", threading.enumerate())
-        # scrapyd.schedule('concertInfoSpider', 'concerts')
-        spider = ConcertsSpider()
-    # reactor.run()
-    # spider.start_requests()
-    # reactor.stop()
-    # settings = Settings()
-    # newSettings = settings.copy()
-    # crawler = CrawlerProcess(newSettings)
-    # crawler.signals.disconnect_all(signal = spider.spider_open)
-    # crawler.crawl('concerts')
-    # runpy.run_module(scrapy)
-    # cmd = Cmd()
-    # Need to traverse file structure to go to spiders folder and then run scrapy crawl command or run as a script..
-    # cmd.onecmd("scrapy crawl concerts")
-    # runpy.run_path('../concertInfoSpider/concertInfoSpider/spiders/concerts_spider.py')
-    # cmd = "scrapy crawl concerts"
-    # cmdline.execute(['scrapy','crawl','concerts'])
-    # instantiate settings
-    # settings = Settings()
-    # print("After settings")
-    # instantiate crawler passing in settings
-    # crawler = CrawlerProcess(settings)
-        settings = Settings()
-    # settings.set(
-    #     'BOT_NAME', 'concertInfoSpider'
-    # )
-        settings.set('ITEM_PIPELINES', {
-        'concertInfoSpider.concertInfoSpider.pipelines.ConcertinfospiderPipeline': 300, })
-        settings.set('TELNETCONSOLE_ENABLED', False)
-        settings.set('DOWNLOAD_DELAY', 2)
-        print('after spider creation before CrawlerProcess instantiation')
-        settings.set('BOT_NAME', 'concertInfoSpider')
-        settings.set('NEWSPIDER_MODULE', 'concertInfoSpider.concertInfoSpider.spiders')
-        settings.set('ROBOTSTXT_OBEY', True)
-        settings.set('SPIDER_MODULES', ['concertInfoSpider.concertInfoSpider.spiders'])
-        # settings.set('SPIDER_MIDDLEWARES', {
-        # 'concertInfoSpider.middlewares.ConcertinfospiderSpiderMiddleware': 543,
-        # })
-        process = CrawlerProcess(settings = settings)
-        # {'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'},
-    # print("after instantiating crawler")
-    # crawler = Crawler(ConcertsSpider, settings)
-    # crawler = CrawlerRunner(settings)
-    # instantiate spider
-    # spider = ConcertsSpider()
-    # print("after spider instance")
-    # # process = CrawlerProcess(ConcertsSpider,settings)
-        print("Before crawl function")
-        process.crawl(spider)
-    # print("Before spider crawls after signals thing")
-    # spider.process.signals.
-    # process.signals.connect(reactor.stop(), signal = signals.spider_closed)
-        print("before start function")
-        process.start()
-        print('after start function')
-        # reactor.run(installSignalHandlers = False)
-    # process.start(stop_after_crawl = True)
-    # process.crawl('concerts')
-    # configure signals
-    # print("Before first signals thing")
-    # configure and start crawler, heads to concerts_spider.py now
-    # crawler.start(stop_after_crawl = True)
-    # crawler.crawl(spider)
-    # crawler.stop()
-    # print("after crawler stop")
-    # # reactor.run()
-    # print("After reactor.run()")
-    # print("After reactor.run with signals things")
-    return redirect('/showAll')
+

@@ -1,11 +1,46 @@
 @import url('https://fonts.googleapis.com/css?family=Quicksand|Merriweather');
+body {
+    background-color: #222;
+}
 .query-results {
     height: 450px;
-    margin-top: 5px;
+    margin-top: 15px;
     margin-bottom: 5px;
     font-family: 'Quicksand', sans-serif;
+    color: lightsteelblue;
 }
 
 .heading-font {
-    font-family: 'Merriweather', serif;    
+    font-family: 'Merriweather', serif; 
+    color: lightsteelblue;   
+}
+
+.b-lazy {
+    -webkit-transition: opacity 500ms ease-in-out;
+       -moz-transition: opacity 500ms ease-in-out;
+         -o-transition: opacity 500ms ease-in-out;
+            transition: opacity 500ms ease-in-out;
+               opacity: 0;
+}
+.b-lazy.b-loaded {
+    opacity: 1;
+}
+.b-error {
+    background-image: url(ucr.jpg);
+    opacity: 2;
+}
+.label {
+    color: white;
+}
+.ucr-note {
+    color: white;
+}
+/* Track */
+::-webkit-scrollbar-track {
+    background: #222; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #404142; 
 }

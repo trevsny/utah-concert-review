@@ -6,7 +6,9 @@ from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError, TCPTimedOutError
 from concertInfoSpider.concertInfoSpider.items import ConcertItem 
-from datetime import datetime
+# Change to concertInfoSpider.concertInfoSpider.items import ConcertItem for production
+# Need concertInfoSpider.items import ConcertItem to run scrapy shell
+import datetime
 
 class ConcertsSpider(scrapy.Spider):
     name = 'concerts'
@@ -17,8 +19,8 @@ class ConcertsSpider(scrapy.Spider):
     # start_urls = [
     #     'http://thestateroom.com/shows'
     # ]
-    currentYear = datetime.now().year
-
+    currentYear = datetime.datetime.now().year
+    today = datetime.date.today()
     def start_requests(self):
         return [
             scrapy.Request('http://thestateroom.com/shows', callback = self.parseSR, errback = self.errback),
@@ -98,7 +100,14 @@ class ConcertsSpider(scrapy.Spider):
         # change days to int for db
         dayArray = list(map(int, dayArray))
         # change years (strings) to int for db
-        yearArray = list(map(int, yearArray))
+        finalYears = []
+        for year in yearArray:
+            if year == '':
+                continue
+            else:
+                finalYears.append(year)
+
+        finalYears = list(map(int, finalYears))
         ticket_links = response.css(".ohanah-registration-link").css("a::attr(href)").extract()
         # --images-- must put http://thestateroom.com before the link
         images = response.css(".ohanah_modal::attr(href)").extract()
@@ -109,7 +118,7 @@ class ConcertsSpider(scrapy.Spider):
             item['artist'] = artists[i]
             item['month'] = monthArray[i]
             item['day'] = dayArray[i]
-            item['year'] = yearArray[i]
+            item['year'] = finalYears[i]
             item['image'] = 'http://thestateroom.com' + images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
@@ -191,12 +200,17 @@ class ConcertsSpider(scrapy.Spider):
                 ticket_links.append("http://thecommonwealthroom.ticketfly.com/listing")
         # send data to pipeline
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, monthArray[i], dayArray[i])
             item = ConcertItem()
             item['venue'] = "The Commonwealth Room"
             item['artist'] = artists[i]
             item['month'] = monthArray[i]
             item['day'] = dayArray[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
@@ -222,12 +236,17 @@ class ConcertsSpider(scrapy.Spider):
         ticket_links = response.css(".ticket-link").css("a::attr(href)").extract()
         # Data to send to pipelines.py
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, monthArray[i], dayArray[i])
             item = ConcertItem()
             item['venue'] = "Kilby Court"
             item['artist'] = artists[i]
             item['month'] = monthArray[i]
             item['day'] = dayArray[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
@@ -298,12 +317,17 @@ class ConcertsSpider(scrapy.Spider):
                 ticket_links.append("https://theunioneventcenter.com/upcomingevents/")
         # Send data to pipeline
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, months[i], days[i])
             item = ConcertItem()
             item['venue'] = "The Union"
             item['artist'] = artists[i]
             item['month'] = months[i]
             item['day'] = days[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
@@ -323,12 +347,17 @@ class ConcertsSpider(scrapy.Spider):
         days = list(map(int, days))
         # send data to pipeline
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, months[i], days[i])
             item = ConcertItem()
             item['venue'] = venues[i]
             item['artist'] = artists[i]
             item['month'] = months[i]
             item['day'] = days[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
@@ -360,12 +389,17 @@ class ConcertsSpider(scrapy.Spider):
 
         # send data to pipeline
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, monthArray[i], dayArray[i])
             item = ConcertItem()
             item['venue'] = "The Complex"
             item['artist'] = artists[i]
             item['month'] = monthArray[i]
             item['day'] = dayArray[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item
@@ -392,12 +426,17 @@ class ConcertsSpider(scrapy.Spider):
         ticket_links = response.css('.ticket-link').css('.primary-link').css('a::attr(href)').extract()
         # send data to pipeline
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, monthArray[i], dayArray[i])
             item = ConcertItem()
             item['venue'] = "Metro Music Hall"
             item['artist'] = artists[i]
             item['month'] = monthArray[i]
             item['day'] = dayArray[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             # Sometimes ticket_link array errors 'list index out of range'
             item['ticket_link'] = ticket_links[i]
@@ -425,12 +464,17 @@ class ConcertsSpider(scrapy.Spider):
         ticket_links = response.css('.ticket-price').css('a::attr(href)').extract()
         # send data to pipeline
         for i in range(len(artists)):
+            concertDate = datetime.date(self.currentYear, monthArray[i], dayArray[i])
             item = ConcertItem()
             item['venue'] = "The Urban Lounge"
             item['artist'] = artists[i]
             item['month'] = monthArray[i]
             item['day'] = dayArray[i]
-            item['year'] = self.currentYear
+            # Add 1 to the current year if concert is listed as before current date (i.e. March 6th and today is Oct 3rd, therefore it must be happening the upcoming year)
+            if concertDate < self.today:
+                item['year'] = self.currentYear + 1
+            else:
+                item['year'] = self.currentYear
             item['image'] = images[i]
             item['ticket_link'] = ticket_links[i]
             yield item

@@ -2,227 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Concerts</title>
+    <title>Upcoming Concerts</title>
     {% load static %}
-    <link rel="stylesheet" type = "text/css" href = "{% static 'styles.css'%}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type = "text/css" href = "{% static 'styles.css'%}">
+    <script src="https://rawgithub.com/dinbror/blazy/master/blazy.min.js"></script>
 
-    <script>
-                $(document).ready(function(){
-                    // Venue Filter
-                    $("#ajax_venue_name").keyup(function(){
-                        $.ajax({
-                            url: '/filterbyvenue',
-                            method: "post",
-                            data: $(this).parent().serialize(),
-                            success: function(serverResponse){
-                                console.log("success", serverResponse)
-                                $("#placeholder1").html(serverResponse)
-                            }
-                        }) 
-                    })
-                    // Artist Filter
-                    $("#ajax_artist_name").keyup(function(){
-                        $.ajax({
-                            url: '/filterbyartist',
-                            method: "post",
-                            data: $(this).parent().serialize(),
-                            success: function(serverResponse){
-                                console.log("success", serverResponse)
-                                $("#placeholder1").html(serverResponse)
-                            }
-                        }) 
-                    })
-                    // Date Filter
-                    $("#ajax_month").change(function(){
-                        $.ajax({
-                            url: '/filterbydate',
-                            method: "post",
-                            data: $(this).parent().serialize(),
-                            success: function(serverResponse){
-                                console.log("success", serverResponse)
-                                $("#placeholder1").html(serverResponse)
-                            }
-                        }) 
-                    })
-                    // Show all concerts
-                    $("#showAll").click(function(){
-                        $("#ajax_venue_name").val("")
-                        $("#ajax_artist_name").val("")
-                        $.ajax({
-                            url:'/showAll',
-                            method: "get",
-                            success: function(serverResponse){
-                                console.log("success")
-                                $("#placeholder1").html(serverResponse)
-                            }
-                        })
-                    })
-
-                    $("#scrape").click(function(){
-                        $.ajax({
-                            url: '/scrape',
-                            method: "post",
-                            success: function(serverResponse){
-                                console.log("Success")
-                                $("#placeholder1").html(serverResponse)
-                            }
-                        })
-                    })
-
-                })
-    </script>
-    
 </head>
 <body>
-    <div class="container">
-        <div class="row mx-auto">
-            <h1 class="h1 text-center heading-font">Upcoming Concerts</h1>
-        </div>
-        <div class="row mx-auto">
-            <h3 class="heading-font">Type to Filter Results</h3>
-        </div>
-        <div id ="filter" class="row">
-            <!-- Venue Filter -->
-            <h4 class="heading-font">By Venue</h4>
-            <form class="form-horizontal" method="POST">
-                {% csrf_token %}
-                <input type="text" class = "form-control" name="venue_starts_with" id = "ajax_venue_name" placeholder="Starts with...">
-            </form>
-            <!-- Artist Filter -->
-            <h4 class="heading-font">By Artist</h4>
-            <form class="form-horizontal" method="POST">
-                    {% csrf_token %}
-                    <input type="text" class = "form-control" name="artist_starts_with" id = "ajax_artist_name" placeholder="Starts with...">
-            </form>
-            <!-- Date Filter -->
-            <h4 class="heading-font">By Month</h4>
-            <form class="form-horizontal" method="POST">
-                    {% csrf_token %}
-                    <select id = "ajax_month" class="form-control" name ="month">
-                            <option name = "January">January</option>
-                            <option name = "February">February</option>
-                            <option name = "March">March</option>
-                            <option name = "April">April</option>
-                            <option name = "May">May</option>
-                            <option name = "June">June</option>
-                            <option name = "July">July</option>
-                            <option name = "August">August</option>
-                            <option name = "September">September</option>
-                            <option name = "October">October</option>
-                            <option name = "November">November</option>
-                            <option name = "December">December</option>
-                    </select>
-            </form>
-        </div>
-        <!-- Show all concerts button -->
-        <div>
-            <button id="showAll" name="showConcerts" class="btn btn-primary">Show All Concerts</button>
-            <form action="/destroy" method="POST" class="form-horizontal">
-                {% csrf_token %}
-                <button id="delete" name="deleteButton" class="btn btn-danger">Delete Old Concerts</button>
-            </form>
-            <!-- <form action="/scrape" method="GET" class="form-horizontal"> -->
-                <button id="scrape" name="scrapeConcerts" class="btn btn-info">Look for more concerts</button>
-            <!-- </form> -->
-        </div>
-        <div id="placeholder1">
-            {% for concert in concerts %}  
-                <div class="col-12 col-sm-6 col-md-3 col-lg-3 query-results" style="height: 400px; margin: 5px;">
-                    <img class="img-rounded" width="200" height="200" src = '{{concert.image}}' alt="artist picture"/>
-                    <p>{{concert.concerts}}</p>
-                    <p class = "h3">{{concert.artist}}</p>
-                    <p class = "h4">{{concert.month}} {{concert.day}}, {{concert.year}}</p>
-                    <p class = "h5">{{concert.venue.venue_name}}</p>
-                    <a href = '{{concert.ticket_link}}'><button class="btn btn-primary text-center">Buy Tickets</button></a>
+    <div class="container-fluid">
+            <div class="row my-3 text-center">
+                <h3 class="heading-font mx-auto">Type to Filter Results</h3>
+            </div>
+            <div class="row">
+                <!-- Venue Filter -->
+                <div class="col-12 col-md-3 m-3">
+                    <h4 class="heading-font">By Venue</h4>
+                    <form class="form-horizontal" method="GET">
+                        <input type="text" class = "form-control" name="venue_starts_with" id = "ajax_venue_name" placeholder="i.e. The State Room">
+                    </form>
                 </div>
-            {% endfor %}
-        </div>
-       
-        <!-- Show up only for Kevin -->
-        <div class = "row col-12 col-md-8 col-lg-6 form-group" id="form">
-            <form class = "form-horizontal" action="/concerts" method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class = "control-label" for="venue">Venue:</label>                                    
-                    <input id = "venue" class = "form-control" type = "text" name="venue" placeholder="i.e. USANA Amphitheater">
+                <!-- Artist Filter -->
+                <div class="col-12 col-md-3 m-3">
+                    <h4 class="heading-font">By Artist</h4>
+                    <form class="form-horizontal" method="GET">
+                        <input type="text" class = "form-control" name="artist_starts_with" id = "ajax_artist_name" placeholder="i.e. Led Zeppelin">
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label class = "control-label" for="artist">Artist:</label>                                    
-                    <input id = "artist" class = "form-control" type="text" name="artist" placeholder="i.e. Led Zeppelin">
+                <!-- Date Filter -->
+                <div class="col-12 col-md-3 m-3">
+                    <h4 class="heading-font">By Month</h4>
+                    <form class="form-horizontal" method="GET">
+                        <select id = "ajax_month" class="form-control" name ="month">
+                            <option value="0">Select Month</option>
+                            <option value = "1">January</option>
+                            <option value = "2">February</option>
+                            <option value = "3">March</option>
+                            <option value = "4">April</option>
+                            <option value = "5">May</option>
+                            <option value = "6">June</option>
+                            <option value = "7">July</option>
+                            <option value = "8">August</option>
+                            <option value = "9">September</option>
+                            <option value = "10">October</option>
+                            <option value = "11">November</option>
+                            <option value = "12">December</option>
+                        </select>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label class = "control-label" for="month">Month:</label>                                    
-                    <select id = "month" class="form-control" name ="month">
-                        <option name = "January">January</option>
-                        <option name = "February">February</option>
-                        <option name = "March">March</option>
-                        <option name = "April">April</option>
-                        <option name = "May">May</option>
-                        <option name = "June">June</option>
-                        <option name = "July">July</option>
-                        <option name = "August">August</option>
-                        <option name = "September">September</option>
-                        <option name = "October">October</option>
-                        <option name = "November">November</option>
-                        <option name = "December">December</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="day" class="control-label" >Day</label>
-                    <select class = "form-control" name ="day">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                        <option>5</option>
-                        <option>6</option>
-                        <option>7</option>
-                        <option>8</option>
-                        <option>9</option>
-                        <option>10</option>
-                        <option>11</option>
-                        <option>12</option>
-                        <option>13</option>
-                        <option>14</option>
-                        <option>15</option>
-                        <option>16</option>
-                        <option>17</option>
-                        <option>18</option>
-                        <option>19</option>
-                        <option>20</option>
-                        <option>21</option>
-                        <option>22</option>
-                        <option>23</option>
-                        <option>24</option>
-                        <option>25</option>
-                        <option>26</option>
-                        <option>27</option>
-                        <option>28</option>
-                        <option>29</option>
-                        <option>30</option>
-                        <option>31</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="control-label" for = "image">Image</label>
-                    <input id = "image" class = "form-control" type="text" name="image">
-                </div>
-                <div class="form-group">
-                    <label class="control-label" for="ticket_link">Buy Ticket URL</label>
-                    <input id = "ticket_link" class = "form-control" type="text" name="ticket_link">
-                </div>
-                <div class="form-group">
-                    <input type="submit" class = "btn btn-success" value="Create">
-                </div>
-            </form>
-        </div>
-        
+            </div>
+            <!-- Show all concerts button -->
+            <div class="row text-center" style="margin-top: 20px;">
+                <button id="showAll" name="showConcerts" class="btn btn-primary btn-lg">Show All Concerts</button>    
+            </div>
     </div>
+        
+    <!-- <div class="container" style="margin-top: 20px;"> -->
+        <div id="placeholder1">
+            {% include "concertFinder/filtered.html" %}
+        </div>
+    <!-- </div> -->
+        
+       
+        
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="static/javascript.js"></script>
 </body>
 </html>
-<!-- Change db so it shows days as 01 instead of as 1 -->
