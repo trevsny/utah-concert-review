@@ -17,35 +17,41 @@ def index(request):
     concerts = ConcertInfo.objects.all().order_by("year","month", "day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
-    return render(request, "concertFinder/index.html", {'concerts':concerts})
+    count = concerts.count()
+    return render(request, "concertFinder/index.html", {'concerts':concerts, 'count':count})
 @xframe_options_exempt
 def filterByVenue(request):
     concerts = ConcertInfo.objects.filter(venue__venue_name__icontains = request.GET['venue_starts_with']).order_by("year", "month","day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
-    return render(request, ('concertFinder/filtered.html'), {'concerts':concerts})
+    count = concerts.count()
+    print(count)
+    return render(request, ('concertFinder/filtered.html'), {'concerts':concerts, 'count': count})
 @xframe_options_exempt
 def filterByArtist(request):
     concerts = ConcertInfo.objects.filter(artist__icontains = request.GET['artist_starts_with']).order_by("year","month","day")
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
-    return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
+    count = concerts.count()
+    return render(request, ('concertFinder/filtered.html'), {'concerts': concerts, 'count':count})
 @xframe_options_exempt
 def filterByDate(request):
-    print(request.GET['month'])
     if request.GET['month'] == "Select Month":
+        count = 0
         return render(request, 'concertFinder/filtered.html')
     else:
         concerts = ConcertInfo.objects.filter(month__exact = request.GET['month']).order_by("year", "month","day")
+        count = concerts.count()
         for concert in concerts:
             concert.month = changeIntToMonthName(concert.month)
-        return render(request, ('concertFinder/filtered.html'), {'concerts': concerts})
+        return render(request, ('concertFinder/filtered.html'), {'concerts': concerts, 'count': count})
 @xframe_options_exempt
 def showAllConcerts(request):
     concerts = ConcertInfo.objects.all().order_by("year", "month","day")
+    count = concerts.count()
     for concert in concerts:
         concert.month = changeIntToMonthName(concert.month)
-    return render(request, 'concertFinder/filtered.html', {'concerts': concerts})
+    return render(request, 'concertFinder/filtered.html', {'concerts': concerts, 'count':count})
 # don't create duplicate concerts
 def create(request):
     # Function to get checkbox data
@@ -97,10 +103,10 @@ def create(request):
             messages.error(request, "Forgot the artist")
             error = True
         if request.POST['month'] == '0':
-            messages.error(request, "Please choose month")
+            messages.error(request, "Please select month")
             error = True
         if request.POST['day'] == '0':
-            messages.error(request, "Please choose day")
+            messages.error(request, "Please select day")
             error = True
         if error:
             return redirect('/success')
@@ -112,23 +118,23 @@ def create(request):
             if venue.venue_name == request.POST['venue']:
                 if request.POST['year']:  #Check year was input
                     if request.POST['image']: #Check for image input
-                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], year = int(request.POST['year']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = int(request.POST['month']), day = int(request.POST['day']), year = int(request.POST['year']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
                         concertVenueExist = True
                         checkboxes(newConcert)
                         break
                     else:  #use default image src saved in models
-                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], year = int(request.POST['year']), ticket_link = request.POST['ticket_link'])
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = int(request.POST['month']), day = int(request.POST['day']), year = int(request.POST['year']), ticket_link = request.POST['ticket_link'])
                         concertVenueExist = True
                         checkboxes(newConcert)
                         break
                 else:  #no year input
                     if request.POST['image']: #Check for image input
-                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = int(request.POST['month']), day = int(request.POST['day']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
                         checkboxes(newConcert)
                         concertVenueExist = True
                         break
                     else: #use default image src saved in models
-                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], ticket_link = request.POST['ticket_link'])
+                        newConcert = ConcertInfo.objects.create(venue = venue, artist = request.POST['artist'], month = int(request.POST['month']), day = int(request.POST['day']), ticket_link = request.POST['ticket_link'])
                         checkboxes(newConcert)
                         concertVenueExist = True
                         break
@@ -139,21 +145,30 @@ def create(request):
         else:
             if request.POST['year']: 
                 newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
-                newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], year = int(request.POST['year']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = int(request.POST['month']), day = int(request.POST['day']), year = int(request.POST['year']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
                 checkboxes(newConcert)
                 print("Is int")
                 messages.success(request, "Successfully created!")
                 return redirect('/success')
             else:
                 newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
-                newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = request.POST['month'], day = request.POST['day'], image = request.POST['image'], ticket_link = request.POST['ticket_link'])
+                newConcert = ConcertInfo.objects.create(venue = newVenue, artist = request.POST['artist'], month = int(request.POST['month']), day = int(request.POST['day']), image = request.POST['image'], ticket_link = request.POST['ticket_link'])
                 checkboxes(newConcert)
                 print("Not an int")
                 messages.success(request, "Successfully created!")
                 return redirect('/success')
     else:
         return redirect('/')
-    
+
+# Delete concert record
+def destroy(request, concert_id):
+    if request.method == "POST":
+        concert = ConcertInfo.objects.get(id = concert_id)
+        concert.delete()
+        messages.success(request, "Concert Deleted")
+        return redirect('/success')
+    else:
+        return redirect('/')
 
 def destroyOld(request):
     # concerts = ConcertInfo.objects.all()
@@ -208,9 +223,6 @@ def success(request):
     if not 'logged_in' in request.session:
         return redirect('/login')
     else:
-        # concerts = ConcertInfo.objects.all().order_by("year","month", "day")
-        # for concert in concerts:
-        #     concert.month = changeIntToMonthName(concert.month)
         return render(request, 'concertFinder/kevin.html')
 def logout(request):
     if request.method == "POST":
@@ -219,6 +231,52 @@ def logout(request):
         except KeyError:
             pass
         return redirect('/login')
+    else:
+        return redirect('/')
+def showEdit(request, concert_id):
+    concert = ConcertInfo.objects.get(id = concert_id)
+    return render(request, 'concertFinder/edit.html', {'concert':concert})
+
+def update(request, concert_id):
+    if request.method == "POST":
+        notes = ConcertNote.objects.all()
+        venues = ConcertVenue.objects.all()
+        concert = ConcertInfo.objects.get(id = concert_id)
+        for venue in venues:
+            if venue.venue_name == request.POST['venue']:
+                concert.venue = venue
+                concert.save()
+            else:
+                newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
+                concert.venue = newVenue
+                concert.save()
+        concert.artist = request.POST['artist']
+        if request.POST['month'] == '0':
+            messages.error(request, "Select a month")
+            return redirect('/edit/' + concert_id)
+        else:
+            concert.month = int(request.POST['month'])
+            concert.save()
+        if request.POST['day'] == '0':
+            messages.error(request, "Select a day")
+            return redirect('/edit/' + concert_id)
+        else:
+            concert.day = int(request.POST['day'])
+            concert.save()
+
+            concert.month = int(request.POST['month'])
+        concert.image = request.POST['image']
+        concert.ticket_link = request.POST['ticket_link']
+        # access notes
+        for note in notes:
+            # See if checkboxes are checked
+            if request.POST.get('note_attending'):
+                concert.note_attend = note
+            if request.POST.get('note_featured'):
+                concert.note_feature = note
+        concert.save()
+        messages.success(request, "Update successful")
+        return redirect('/edit/'+concert_id)
     else:
         return redirect('/')
 
