@@ -3,7 +3,7 @@ body {
     background-color: #222;
 }
 .query-results {
-    height: 450px;
+    height: 490px;
     margin-top: 15px;
     margin-bottom: 5px;
     font-family: 'Quicksand', sans-serif;
@@ -34,6 +34,7 @@ body {
 }
 .ucr-note {
     color: white;
+    margin-top: 10px;
 }
 /* Track */
 ::-webkit-scrollbar-track {
@@ -43,4 +44,11 @@ body {
 /* Handle */
 ::-webkit-scrollbar-thumb {
     background: #404142; 
+}
+.a-update {
+    text-decoration: none !important;
+}
+.custom-button {
+    width: 200px;
+
 }

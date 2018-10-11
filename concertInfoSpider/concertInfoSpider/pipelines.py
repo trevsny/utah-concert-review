@@ -36,7 +36,7 @@ class ConcertinfospiderPipeline(object):
             for ven in venues:
                 concertVenueExists = False
                 if item['venue'] == ven.venue_name:
-                    ConcertInfo.objects.create(venue = ven, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+                    ConcertInfo.objects.create(venue = ven, artist = item['artist'], month = item['month'], day = item['day'], year = item['year'], image = item['image'], ticket_link = item['ticket_link'])
                     concertVenueExists = True
                     break
                     
@@ -44,11 +44,11 @@ class ConcertinfospiderPipeline(object):
                 return item
             else:
                 newVenue = ConcertVenue.objects.create(venue_name = item['venue'])
-                ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+                ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], year = item['year'], image = item['image'], ticket_link = item['ticket_link'])
                 return item
         else:
             # If there are no concerts in the database then create this one
             newVenue = ConcertVenue.objects.create(venue_name = item['venue'])
-            ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], image = item['image'], ticket_link = item['ticket_link'])
+            ConcertInfo.objects.create(venue = newVenue, artist = item['artist'], month = item['month'], day = item['day'], year = item['year'], image = item['image'], ticket_link = item['ticket_link'])
             return item
           
