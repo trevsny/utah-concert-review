@@ -265,6 +265,7 @@ def update(request, concert_id):
             concert.save()
 
             concert.month = int(request.POST['month'])
+        concert.year = int(request.POST['year'])
         concert.image = request.POST['image']
         concert.ticket_link = request.POST['ticket_link']
         # access notes
