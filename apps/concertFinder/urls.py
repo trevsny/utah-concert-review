@@ -20,5 +20,6 @@ urlpatterns = [
     url(r'^edit/(?P<concert_id>\d+)', views.showEdit),
     url(r'^update/(?P<concert_id>\d+)', views.update),
     url(r'^destroy/(?P<concert_id>\d+)', views.destroy),
-    url(r'^favicon.ico$',RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'),permanent=False),name="favicon")
+    url(r'^favicon.ico$',RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'),permanent=False),name="favicon"),
+    url(r'^', views.index)
 ]
