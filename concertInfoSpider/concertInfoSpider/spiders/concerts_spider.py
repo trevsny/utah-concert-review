@@ -172,7 +172,7 @@ class ConcertsSpider(scrapy.Spider):
             item['day'] = 0
             item['year'] = self.currentYear
             item['image'] = images[i]
-            item['ticket_link'] = ticket_links[i]
+            item['ticket_link'] = "https://www.egyptiantheatrecompany.org/" + ticket_links[i]
             yield item
     # The Commonwealth Room
     def parseCommon(self, response):
