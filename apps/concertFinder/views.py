@@ -253,13 +253,13 @@ def update(request, concert_id):
         concert.artist = request.POST['artist']
         if request.POST['month'] == '0':
             messages.error(request, "Select a month")
-            return redirect('/edit/' + concert_id)
+            return redirect('/edit/' + str(concert_id))
         else:
             concert.month = int(request.POST['month'])
             concert.save()
         if request.POST['day'] == '0':
             messages.error(request, "Select a day")
-            return redirect('/edit/' + concert_id)
+            return redirect('/edit/' + str(concert_id))
         else:
             concert.day = int(request.POST['day'])
             concert.save()
@@ -277,7 +277,7 @@ def update(request, concert_id):
                 concert.note_feature = note
         concert.save()
         messages.success(request, "Update successful")
-        return redirect('/edit/'+concert_id)
+        return redirect('/edit/'+str(concert_id))
     else:
         return redirect('/')
 
