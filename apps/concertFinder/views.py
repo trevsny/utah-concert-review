@@ -67,14 +67,19 @@ def create(request):
                     break
                 elif request.POST.get('note_attending') and not request.POST.get('note_featured'):
                     newConcert.note_attend = note
+                    newConcert.note_feature = None
                     newConcert.save()
                     break
                 elif request.POST.get('note_featured') and not request.POST.get('note_attending'):
                     newConcert.note_feature = note
+                    newConcert.note_attend = None
                     newConcert.save()
                     break
                 else:
-                    return newConcert
+                    newConcert.note_feature = None
+                    newConcert.note_attend = None
+                    newConcert.save()
+            return newConcert
         # If notes doesn't exist - Creating one object in notes table - hard coded phrases
         else:
             newNote = ConcertNote.objects.create(note_attending = "We'll be there!", note_featured = "UCR Featured Concert")
@@ -112,6 +117,8 @@ def create(request):
             return redirect('/success')
         # create object
         venues = ConcertVenue.objects.all()
+        # When database is empty need this line
+        concertVenueExist = False
         # Does venue already exist in db?
         for venue in venues:
             concertVenueExist = False
@@ -274,8 +281,12 @@ def update(request, concert_id):
                 # See if checkboxes are checked
                 if request.POST.get('note_attending'):
                     concert.note_attend = note
+                else:
+                    concert.note_attend = None
                 if request.POST.get('note_featured'):
                     concert.note_feature = note
+                else:
+                    concert.note_feature = None
             concert.save()
             messages.success(request, "Update successful")
             return redirect('/edit/'+str(concert_id))
