@@ -241,43 +241,47 @@ def update(request, concert_id):
     if request.method == "POST":
         notes = ConcertNote.objects.all()
         venues = ConcertVenue.objects.all()
-        concert = ConcertInfo.objects.get(id = concert_id)
-        for venue in venues:
-            if venue.venue_name == request.POST['venue']:
-                concert.venue = venue
-                concert.save()
+        try:
+            concert = ConcertInfo.objects.get(id = concert_id)
+            for venue in venues:
+                if venue.venue_name == request.POST['venue']:
+                    concert.venue = venue
+                    concert.save()
+                else:
+                    newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
+                    concert.venue = newVenue
+                    concert.save()
+            concert.artist = request.POST['artist']
+            if request.POST['month'] == '0':
+                messages.error(request, "Select a month")
+                return redirect('/edit/' + str(concert_id))
             else:
-                newVenue = ConcertVenue.objects.create(venue_name = request.POST['venue'])
-                concert.venue = newVenue
+                concert.month = int(request.POST['month'])
                 concert.save()
-        concert.artist = request.POST['artist']
-        if request.POST['month'] == '0':
-            messages.error(request, "Select a month")
-            return redirect('/edit/' + str(concert_id))
-        else:
-            concert.month = int(request.POST['month'])
-            concert.save()
-        if request.POST['day'] == '0':
-            messages.error(request, "Select a day")
-            return redirect('/edit/' + str(concert_id))
-        else:
-            concert.day = int(request.POST['day'])
-            concert.save()
+            if request.POST['day'] == '0':
+                messages.error(request, "Select a day")
+                return redirect('/edit/' + str(concert_id))
+            else:
+                concert.day = int(request.POST['day'])
+                concert.save()
 
-            concert.month = int(request.POST['month'])
-        concert.year = int(request.POST['year'])
-        concert.image = request.POST['image']
-        concert.ticket_link = request.POST['ticket_link']
-        # access notes
-        for note in notes:
-            # See if checkboxes are checked
-            if request.POST.get('note_attending'):
-                concert.note_attend = note
-            if request.POST.get('note_featured'):
-                concert.note_feature = note
-        concert.save()
-        messages.success(request, "Update successful")
-        return redirect('/edit/'+str(concert_id))
+                concert.month = int(request.POST['month'])
+            concert.year = int(request.POST['year'])
+            concert.image = request.POST['image']
+            concert.ticket_link = request.POST['ticket_link']
+            # access notes
+            for note in notes:
+                # See if checkboxes are checked
+                if request.POST.get('note_attending'):
+                    concert.note_attend = note
+                if request.POST.get('note_featured'):
+                    concert.note_feature = note
+            concert.save()
+            messages.success(request, "Update successful")
+            return redirect('/edit/'+str(concert_id))
+        except:
+            messages.error(request, "Update failed. :( Try deleting concert and creating it from scratch")
+            return redirect('/edit/'+str(concert_id))
     else:
         return redirect('/')
 
