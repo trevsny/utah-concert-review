@@ -279,13 +279,15 @@ def update(request, concert_id):
             # access notes
             for note in notes:
                 # See if checkboxes are checked
-                if request.POST.get('note_attending'):
+                if request.POST.get('note_attending') and request.POST.get('note_featured'):
                     concert.note_attend = note
-                else:
-                    concert.note_attend = None
-                if request.POST.get('note_featured'):
+                    concert.note_feature = note
+                elif request.POST.get('note_attending'):
+                    concert.note_attend = note
+                elif request.POST.get('note_featured'):
                     concert.note_feature = note
                 else:
+                    concert.note_attend = None
                     concert.note_feature = None
             concert.save()
             messages.success(request, "Update successful")
