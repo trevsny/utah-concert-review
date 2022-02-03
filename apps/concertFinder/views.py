@@ -11,6 +11,13 @@ from twisted.internet import reactor
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+KEVIN_LOGIN = os.getenv('KEVIN_LOGIN')
+KEVIN_PASSWORD = os.getenv('KEVIN_PASSWORD')
 
 @xframe_options_exempt
 def index(request):
@@ -216,7 +223,7 @@ def showLoginPage(request):
 # Login
 def login(request):
     if request.method == "POST":
-        if request.POST['login_username'] == "Bestfriendkev27" and request.POST['login_password'] == "Knights08":
+        if request.POST['login_username'] == KEVIN_LOGIN and request.POST['login_password'] == KEVIN_PASSWORD:
             request.session['logged_in'] = True
             return redirect('/success')
         else:
