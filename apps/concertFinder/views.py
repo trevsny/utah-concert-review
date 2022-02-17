@@ -232,12 +232,12 @@ def login(request):
     else:
         return redirect('/login')
 
-# Show kevin's html page
+# Show concert admin html page
 def success(request):
     if not 'logged_in' in request.session:
         return redirect('/login')
     else:
-        return render(request, 'concertFinder/kevin.html')
+        return render(request, 'concertFinder/concert_admin.html')
 def logout(request):
     if request.method == "POST":
         try:
