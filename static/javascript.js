@@ -1,4 +1,4 @@
-    
+
             // Venue Filter
             $("#ajax_venue_name").keyup(function(){
                 $("#ajax_artist_name").val("")
