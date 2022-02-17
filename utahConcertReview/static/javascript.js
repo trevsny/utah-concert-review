@@ -43,7 +43,7 @@
             $("#showAll").click(function(){
                 $("#ajax_venue_name").val("")
                 $("#ajax_artist_name").val("")
-                $("#ajax_month").val(0)
+                $("#ajax_month").val("0")
                 $.ajax({
                     url:'/showAll',
                     method: "get",
