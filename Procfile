@@ -1,1 +1,1 @@
-web: utahConcertReview.wsgi
+web: gunicorn utahConcertReview.wsgi
