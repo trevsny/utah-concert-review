@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 # from dotenv import load_dotenv
+# added comment here in order to commit a change to trigger a heroku deployment. :)
 import os
 
 # load_dotenv()
