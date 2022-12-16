@@ -29,12 +29,12 @@ class ConcertInfo(models.Model):
     month = models.IntegerField()
     day = models.IntegerField()
     year = models.IntegerField(default = datetime.datetime.today().year)
-    image = models.CharField(max_length = 255, default = "static/ucr.jpg")
+    image = models.CharField(max_length = 255, default = "static/ucr.jpg") # default pic of UCR logo if no image added
     ticket_link = models.CharField(max_length = 255, default = "")
     note_attend = models.ForeignKey(ConcertNote, related_name = "attending", blank = True, null = True, on_delete = models.CASCADE)
     note_feature = models.ForeignKey(ConcertNote, related_name = "featured", blank = True, null = True, on_delete = models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add = True)
-    updated_at = models.DateTimeField(auto_now = True)
+    created_at = models.DateTimeField(auto_now_add = True) # timestamp of when it's added to the db
+    updated_at = models.DateTimeField(auto_now = True) # timestamp 
 
     def __str__(self):
         template = '{0.artist}{0.month}{0.day}'
